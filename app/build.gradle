@@ -47,12 +47,12 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'
-    testImplementation 'junit:junit:4.+'
+    testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     //kite
-//    api files('libs/kiteconnect.jar')
+    implementation files('libs/kiteconnect.jar')
 
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     def pagingVersion = "3.0.0-beta01"

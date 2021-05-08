@@ -6,7 +6,7 @@
 
         <variable
             name="viewModel"
-            type="com.example.latestnews.ui.news.NewsViewModel" />
+            type="com.example.smarttrade.ui.login.LoginViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
