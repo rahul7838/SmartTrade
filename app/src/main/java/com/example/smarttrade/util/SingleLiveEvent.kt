@@ -1,4 +1,4 @@
-package com.example.githubrepos.util
+package com.example.smarttrade.util
 
 import androidx.annotation.MainThread
 import androidx.lifecycle.LifecycleOwner

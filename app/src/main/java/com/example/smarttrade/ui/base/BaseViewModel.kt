@@ -1,7 +1,7 @@
 package com.example.smarttrade.ui.base
 
 import androidx.lifecycle.ViewModel
-import com.example.githubrepos.util.SingleLiveEvent
+import com.example.smarttrade.util.SingleLiveEvent
 import com.example.smarttrade.di.DEFAULT
 import com.example.smarttrade.di.IO
 import kotlinx.coroutines.CoroutineScope

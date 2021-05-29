@@ -8,10 +8,12 @@ import androidx.annotation.LayoutRes
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.fragment.app.Fragment
+import org.koin.core.component.KoinApiExtension
 
 /**
  *  BaseFragment for keeping an instance of [ViewDataBinding]
  */
+@KoinApiExtension
 abstract class BaseFragment<VB : ViewDataBinding, VM : BaseViewModel> : Fragment() {
 
     protected var viewDataBinding: VB? = null
@@ -51,6 +53,17 @@ abstract class BaseFragment<VB : ViewDataBinding, VM : BaseViewModel> : Fragment
         viewDataBinding?.setVariable(getBindingVariable(), getViewModel())
         viewDataBinding?.executePendingBindings()
         viewDataBinding?.lifecycleOwner = viewLifecycleOwner
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        initObserver()
+    }
+
+    private fun initObserver() {
+        getViewModel().showProgressBar.observe(viewLifecycleOwner, {
+            setLoader(it)
+        })
     }
 
     override fun onDestroyView() {

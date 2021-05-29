@@ -1,7 +1,3 @@
-package com.example.latestnews.util
+package com.example.smarttrade.util
 
-// News List Fragment
-const val NEWS_CONTENT = "newsContent"
-const val NEWS_TITLE = "newsTitle"
-const val NEWS_URL = "newsUrl"
-const val NEWS_URL_TO_IMAGE = "newsUrlToImage"
+const val REQUEST_TOKEN = "requestToken"

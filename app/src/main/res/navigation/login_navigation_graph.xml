@@ -6,5 +6,17 @@
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.example.smarttrade.ui.login.LoginFragment"
-        android:label="LoginFragment" />
+        android:label="LoginFragment" >
+        <action
+            android:id="@+id/action_loginFragment_to_webViewFragment"
+            app:destination="@id/webViewFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/webViewFragment"
+        android:name="com.example.smarttrade.ui.login.WebViewFragment"
+        android:label="WebViewFragment" />
+    <fragment
+        android:id="@+id/portfolioFragment"
+        android:name="com.example.smarttrade.ui.portfolio.PortfolioFragment"
+        android:label="PortfolioFragment" />
 </navigation>
