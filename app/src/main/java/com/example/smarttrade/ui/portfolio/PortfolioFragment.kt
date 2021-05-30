@@ -1,12 +1,8 @@
 package com.example.smarttrade.ui.portfolio
 
-import android.app.Activity
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatCallback
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.view.ActionMode
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
 import com.example.smarttrade.BR
@@ -50,7 +46,7 @@ class PortfolioFragment : BaseFragment<FragmentPortfolioBinding, PortfolioViewMo
         adapter.itemLongClickListener = {
 //            (requireActivity() as Activity).startActionMode()
         }
-        adapter.appCompatDelegate = { createAppCompatDelegate() }
+        adapter.appCompatDelegate = { createAppCompatDelegate }
     }
 
     private fun initObserver() {
@@ -62,10 +58,11 @@ class PortfolioFragment : BaseFragment<FragmentPortfolioBinding, PortfolioViewMo
 //        AppCompatActivity.
     }
 
-    private fun createAppCompatDelegate(): AppCompatDelegate {
-        return AppCompatDelegate.create(requireContext(), requireActivity(), null)
+    private val createAppCompatDelegate: AppCompatDelegate by lazy {
+        AppCompatDelegate.create(requireContext(), requireActivity(), null)
     }
 
-
-
+    override fun onDestroyView() {
+        super.onDestroyView()
+    }
 }

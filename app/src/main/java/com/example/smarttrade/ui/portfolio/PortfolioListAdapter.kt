@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.databinding.DataBindingUtil
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.PortfolioRecyclerItemBinding
@@ -13,16 +12,13 @@ import com.example.smarttrade.util.MultiSelect
 import com.zerodhatech.models.Position
 import timber.log.Timber
 
-class PortfolioListAdapter : RecyclerView.Adapter<PortfolioListAdapter.PortfolioViewHolder>() {
+class PortfolioListAdapter : MultiSelect<PortfolioListAdapter.PortfolioViewHolder>() {
 
-    private val list: MutableList<Position> = mutableListOf()
     var itemLongClickListener: ((position: Position) -> Unit)? = null
-
-    val multiSelect: MultiSelect by lazy { MultiSelect() }
     lateinit var appCompatDelegate: () -> AppCompatDelegate
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PortfolioViewHolder {
+        Timber.d("onCreateViewHolder")
         val layoutInflater = LayoutInflater.from(parent.context)
         val viewDataBinding: PortfolioRecyclerItemBinding =
             DataBindingUtil.inflate(layoutInflater, R.layout.portfolio_recycler_item, parent, false)
@@ -30,6 +26,7 @@ class PortfolioListAdapter : RecyclerView.Adapter<PortfolioListAdapter.Portfolio
     }
 
     override fun onBindViewHolder(holder: PortfolioViewHolder, position: Int) {
+        Timber.d("onBindViewHolder")
         holder.update(list[position])
     }
 
@@ -37,61 +34,7 @@ class PortfolioListAdapter : RecyclerView.Adapter<PortfolioListAdapter.Portfolio
         return list.size
     }
 
-    fun updateList(newList: List<Position>) {
-        val diffCallback = DiffPortfolioList(list, newList)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        list.clear()
-        list.addAll(newList)
-        diffResult.dispatchUpdatesTo(this)
-    }
-
-    class DiffPortfolioList(
-        private val oldList: List<Position>,
-        private val newList: List<Position>
-    ) : DiffUtil.Callback() {
-        override fun getOldListSize(): Int = oldList.size
-
-        override fun getNewListSize(): Int = newList.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldList[oldItemPosition] === newList[newItemPosition]
-        }
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldPosition = oldList[oldItemPosition]
-            val newPosition = newList[newItemPosition]
-            return oldPosition.run {
-                newPosition.let {
-                    averagePrice == it.averagePrice &&
-                            buyPrice == it.buyPrice &&
-                            buyQuantity == it.buyQuantity &&
-                            buyValue == it.buyValue &&
-                            buym2m == it.buym2m &&
-                            closePrice == it.closePrice &&
-                            sellPrice == it.sellPrice &&
-                            sellQuantity == it.sellQuantity &&
-                            sellValue == it.sellValue &&
-                            dayBuyPrice == it.dayBuyPrice &&
-                            dayBuyQuantity == it.dayBuyQuantity &&
-                            dayBuyValue == it.dayBuyValue &&
-                            daySellPrice == it.daySellPrice &&
-                            daySellQuantity == it.daySellQuantity &&
-                            daySellValue == it.daySellValue &&
-                            product == it.product &&
-                            exchange == it.exchange &&
-                            lastPrice == it.lastPrice &&
-                            unrealised == it.unrealised &&
-                            m2m == it.m2m &&
-                            tradingSymbol == it.tradingSymbol &&
-                            netQuantity == it.netQuantity &&
-                            netValue == it.netValue
-                }
-            }
-        }
-
-    }
-
-
+    //region
     inner class PortfolioViewHolder(private val viewDataBinding: PortfolioRecyclerItemBinding) :
         RecyclerView.ViewHolder(viewDataBinding.root) {
 
@@ -101,10 +44,10 @@ class PortfolioListAdapter : RecyclerView.Adapter<PortfolioListAdapter.Portfolio
                 totalProfitLossAmount.text = position.pnl.toString()
             }
 
-            if (multiSelect.listOfSelectedItem.contains(position)) {
-                viewDataBinding.root.setBackgroundColor(Color.WHITE)
-            } else {
+            if (listOfSelectedItem.contains(position)) {
                 viewDataBinding.root.setBackgroundColor(Color.GRAY)
+            } else {
+                viewDataBinding.root.setBackgroundColor(Color.WHITE)
             }
 
             onLongClickListener(position)
@@ -112,29 +55,31 @@ class PortfolioListAdapter : RecyclerView.Adapter<PortfolioListAdapter.Portfolio
         }
 
         private fun selectItem(item: Position) {
-            if(multiSelect.isOn) {
-                if(multiSelect.listOfSelectedItem.contains(item)) {
-                    multiSelect.listOfSelectedItem.remove(item)
+            if (isOn) {
+                if (listOfSelectedItem.contains(item)) {
+                    listOfSelectedItem.remove(item)
                     viewDataBinding.root.setBackgroundColor(Color.WHITE)
                 } else {
-                    multiSelect.listOfSelectedItem.add(item)
+                    listOfSelectedItem.add(item)
                     viewDataBinding.root.setBackgroundColor(Color.GRAY)
                 }
             }
         }
 
         private fun onClickListener(position: Position) {
-            if(multiSelect.isOn) {
-                selectItem(position)
-            } else {
-                Timber.d("$bindingAdapterPosition is clicked $position ")
+            viewDataBinding.root.setOnClickListener {
+                if (isOn) {
+                    selectItem(position)
+                } else {
+                    Timber.d("$bindingAdapterPosition is clicked $position ")
+                }
             }
         }
 
         private fun onLongClickListener(position: Position) {
             viewDataBinding.root.setOnLongClickListener {
-                if(!multiSelect.isOn) {
-                    multiSelect.startActionMode(
+                if (!isOn) {
+                    startActionMode(
                         appCompatDelegate.invoke(), R.menu.portfolio_menu, "Group Position"
                     )
                     selectItem(position)
@@ -143,4 +88,5 @@ class PortfolioListAdapter : RecyclerView.Adapter<PortfolioListAdapter.Portfolio
             }
         }
     }
+    //endregion
 }
