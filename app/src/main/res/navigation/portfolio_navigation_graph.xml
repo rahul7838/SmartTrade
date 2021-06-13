@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/portfolio_navigation_graph"
+    app:startDestination="@id/portfolioFragment3">
+    <fragment
+        android:id="@+id/portfolioFragment3"
+        android:name="com.example.smarttrade.ui.position.PositionFragment"
+        android:label="PortfolioFragment" />
+    <fragment
+        android:id="@+id/groupFragment"
+        android:name="com.example.smarttrade.ui.group.GroupFragment"
+        android:label="GroupFragment" />
+</navigation>

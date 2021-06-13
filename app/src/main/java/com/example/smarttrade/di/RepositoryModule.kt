@@ -1,7 +1,8 @@
 package com.example.smarttrade.di
 
+import com.example.smarttrade.repository.KiteConnectRepository
 import org.koin.dsl.module
 
 val repositoryModule = module {
-//    single { NewsRepository(get(), get()) }
+    single { KiteConnectRepository(get()) }
 }

@@ -1,21 +1,25 @@
 package com.example.smarttrade
 
 import android.os.NetworkOnMainThreadException
+import com.example.smarttrade.manager.PreferenceManager
 import com.zerodhatech.kiteconnect.KiteConnect
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException
 import com.zerodhatech.models.Position
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
+import org.koin.core.component.KoinApiExtension
 import timber.log.Timber
 import java.io.IOException
-import kotlin.jvm.Throws
 
+@KoinApiExtension
 object KiteConnect {
 
-//    private val kiteConnect: KiteConnect by lazy { com.zerodhatech.kiteconnect.KiteConnect("fwyko6uvpf7r8i07") }
 
-    private val kiteConnect: KiteConnect = KiteConnect("fwyko6uvpf7r8i07")
+    init {
+        Timber.d("Singleton class kite connect created")
+    }
+
+    private val kiteConnect: KiteConnect by lazy {
+        KiteConnect("fwyko6uvpf7r8i07", true)
+    }
 
     fun initKitConnect() {
         kiteConnect.userId = ""
@@ -30,7 +34,10 @@ object KiteConnect {
     fun createSession(requestToken: String) {
         try {
             val user = kiteConnect.generateSession(requestToken, "os0xtu7l5mkzvtfp281skxyy4iatqrnz")
-            kiteConnect.accessToken = user.accessToken
+            user.accessToken.also {
+                PreferenceManager.setAccessToken(it)
+                kiteConnect.accessToken = it
+            }
             kiteConnect.publicToken = user.publicToken
         } catch (ioException: IOException) {
             Timber.e(ioException)
@@ -52,5 +59,16 @@ object KiteConnect {
         }
     }
 
+    fun setAccessToken(accessToken: String) {
+        kiteConnect.accessToken = accessToken
+    }
 
+    fun setPublicToken(publicToken: String) {
+        kiteConnect.publicToken = publicToken
+    }
+
+    fun finalize() {
+        // finalization logic
+        Timber.d("Before garbage collection")
+    }
 }

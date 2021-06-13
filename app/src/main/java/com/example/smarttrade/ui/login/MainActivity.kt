@@ -7,17 +7,20 @@ import androidx.navigation.findNavController
 import com.example.smarttrade.KiteConnect
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityMainBinding
+import com.example.smarttrade.extension.startActivity
 import com.example.smarttrade.ui.base.BaseActivity
 import com.example.smarttrade.ui.base.BaseViewModel
+import com.example.smarttrade.ui.position.PortfolioActivity
 import com.example.smarttrade.util.REQUEST_TOKEN
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinApiExtension
 import timber.log.Timber
 
 @KoinApiExtension
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
-    private val loginViewModel: LoginViewModel by inject()
+    private val loginViewModel: LoginViewModel by viewModel()
 
     override fun getViewModel(): BaseViewModel = loginViewModel
 
@@ -34,10 +37,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         Timber.d("executed")
         val requestToken = intent?.data?.getQueryParameter("request_token")
         val bundle = bundleOf(REQUEST_TOKEN to requestToken)
-        findNavController(R.id.launcher_nav_host).navigate(R.id.portfolioFragment, bundle)
+        startActivity<PortfolioActivity>(bundle)
     }
 
-    fun setActionBarTitle(title: String) {
+    private fun setActionBarTitle(title: String) {
         actionBar?.title = title
     }
 }

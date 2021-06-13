@@ -17,6 +17,14 @@
         android:label="WebViewFragment" />
     <fragment
         android:id="@+id/portfolioFragment"
-        android:name="com.example.smarttrade.ui.portfolio.PortfolioFragment"
-        android:label="PortfolioFragment" />
+        android:name="com.example.smarttrade.ui.position.PositionFragment"
+        android:label="PortfolioFragment" >
+        <action
+            android:id="@+id/action_portfolioFragment_to_portfolioDetailsFragment"
+            app:destination="@id/portfolioDetailsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/portfolioDetailsFragment"
+        android:name="com.example.smarttrade.ui.groupdetails.GroupPositionDetailsFragment"
+        android:label="PortfolioDetailsFragment" />
 </navigation>

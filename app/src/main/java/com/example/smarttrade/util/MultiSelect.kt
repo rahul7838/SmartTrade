@@ -86,57 +86,10 @@ abstract class MultiSelect<VH : RecyclerView.ViewHolder> : ActionMode.Callback,
     }
 
     fun updateList(newList: List<Position>) {
-//        val diffCallback = DiffPortfolioList(list, newList)
-//        val diffResult = DiffUtil.calculateDiff(diffCallback)
         list.clear()
         list.addAll(newList)
-//        diffResult.dispatchUpdatesTo(this)
         notifyDataSetChanged()
     }
 
-    class DiffPortfolioList(
-        private val oldList: List<Position>,
-        private val newList: List<Position>
-    ) : DiffUtil.Callback() {
-        override fun getOldListSize(): Int = oldList.size
 
-        override fun getNewListSize(): Int = newList.size
-
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            return oldList[oldItemPosition] === newList[newItemPosition]
-        }
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldPosition = oldList[oldItemPosition]
-            val newPosition = newList[newItemPosition]
-            return oldPosition.run {
-                newPosition.let {
-                    averagePrice == it.averagePrice &&
-                            buyPrice == it.buyPrice &&
-                            buyQuantity == it.buyQuantity &&
-                            buyValue == it.buyValue &&
-                            buym2m == it.buym2m &&
-                            closePrice == it.closePrice &&
-                            sellPrice == it.sellPrice &&
-                            sellQuantity == it.sellQuantity &&
-                            sellValue == it.sellValue &&
-                            dayBuyPrice == it.dayBuyPrice &&
-                            dayBuyQuantity == it.dayBuyQuantity &&
-                            dayBuyValue == it.dayBuyValue &&
-                            daySellPrice == it.daySellPrice &&
-                            daySellQuantity == it.daySellQuantity &&
-                            daySellValue == it.daySellValue &&
-                            product == it.product &&
-                            exchange == it.exchange &&
-                            lastPrice == it.lastPrice &&
-                            unrealised == it.unrealised &&
-                            m2m == it.m2m &&
-                            tradingSymbol == it.tradingSymbol &&
-                            netQuantity == it.netQuantity &&
-                            netValue == it.netValue
-                }
-            }
-        }
-
-    }
 }

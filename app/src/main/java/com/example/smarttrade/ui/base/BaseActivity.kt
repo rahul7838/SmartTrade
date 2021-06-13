@@ -1,5 +1,6 @@
 package com.example.smarttrade.ui.base
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -26,6 +27,7 @@ abstract class BaseActivity<VB : ViewDataBinding> : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         activityBaseBinding = DataBindingUtil.setContentView(this, R.layout.activity_base)
         activityBaseBinding?.executePendingBindings()
         activityBaseBinding?.lifecycleOwner = this

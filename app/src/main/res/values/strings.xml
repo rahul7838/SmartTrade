@@ -11,4 +11,6 @@
     <string name="login_failed">"Login failed"</string>
     <string name="action_sign_in_with_zerodha">Sign in with Zerodha</string>
     <string name="combine">Combine</string>
+    <string name="position">Position</string>
+    <string name="group">Group</string>
 </resources>
