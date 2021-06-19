@@ -1,14 +1,11 @@
 package com.example.smarttrade.ui.position
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.liveData
-import androidx.lifecycle.viewModelScope
 import com.example.smarttrade.repository.KiteConnectRepository
 import com.example.smarttrade.repository.LocalPosition
 import com.example.smarttrade.ui.base.BaseViewModel
-import com.zerodhatech.models.Position
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinApiExtension
 
@@ -28,14 +25,41 @@ class PositionViewModel(
     private fun createSession(requestToken: String) {
         ioDispatcher.launch {
             kiteConnectRepository.createSession(requestToken)
-            kiteConnectRepository.fetchPositions()
+            kiteConnectRepository.fetchAndInsertPosition()
         }
     }
 
     fun getPosition(): LiveData<List<LocalPosition>> {
-       return liveData {
-           emit(kiteConnectRepository.getPosition())
-       }
+        return kiteConnectRepository.getPosition().asLiveData()
+    }
+
+    fun updateStopLoss(
+        instrumentToken: String,
+        lastPrice: Double,
+        isInPercent: Boolean,
+        stopLoss: Double
+    ) {
+        ioDispatcher.launch {
+            if (isInPercent) {
+                kiteConnectRepository.updateStopLossInPercent(instrumentToken, stopLoss)
+                val findStopLossValue = lastPrice * (1 - stopLoss / 100)
+                kiteConnectRepository.updateOldStopLossPrice(instrumentToken, findStopLossValue)
+            } else {
+                kiteConnectRepository.updateOldStopLossPrice(instrumentToken, stopLoss)
+                val findStopLossInPercent = 100 * (1 - stopLoss / lastPrice)
+                kiteConnectRepository.updateStopLossInPercent(
+                    instrumentToken,
+                    findStopLossInPercent
+                )
+            }
+        }
+    }
+
+    fun removeStopLoss(instrumentToken: String) {
+        ioDispatcher.launch {
+            kiteConnectRepository.updateStopLossInPercent(instrumentToken, null)
+            kiteConnectRepository.updateOldStopLossPrice(instrumentToken, null)
+        }
     }
 
     //region

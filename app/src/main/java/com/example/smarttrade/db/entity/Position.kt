@@ -12,7 +12,7 @@ data class Position(
 
     var sellValue: Double? = null,
 
-    var lastPrice: Double? = null,
+    var lastPrice: Double,
 
     var unrealised: Double? = null,
 
@@ -65,5 +65,9 @@ data class Position(
 
     var value: Double? = 0.0,
 
-    var averagePrice: Double? = 0.0
+    var averagePrice: Double? = 0.0,
+    // local properties
+    var stopLossInPercent: Double? = null,
+
+    var stopLossPrice: Double? = null
 )

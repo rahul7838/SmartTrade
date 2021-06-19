@@ -3,6 +3,8 @@ package com.example.smarttrade.repository
 import com.example.smarttrade.KiteConnect
 import com.example.smarttrade.db.dao.PositionDao
 import com.example.smarttrade.extension.parseLocal
+import com.zerodhatech.models.Position
+import kotlinx.coroutines.flow.Flow
 import org.koin.core.component.KoinApiExtension
 import timber.log.Timber
 
@@ -21,8 +23,8 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
      *
      * @return
      */
-    suspend fun fetchPositions() {
-        Timber.d("fetch positions")
+    suspend fun fetchAndInsertPosition() {
+        Timber.d("fetch and insert positions")
         val positions = KiteConnect.getPosition()
 
         positions.values.forEach {
@@ -47,10 +49,48 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
         //endregion
     }
 
-    suspend fun getPosition(): List<LocalPosition> {
+    suspend fun insertPositionInBatch(positionMap: Map<String, List<Position>>) {
+        positionMap.values.forEach {
+            positionDao.insertPositions(it.parseLocal())
+        }
+    }
+
+    suspend fun insertPosition(position: LocalPosition) {
+        positionDao.insertPosition(position)
+    }
+
+    suspend fun fetchPosition(): Map<String, List<Position>> {
+        Timber.d("fetch position")
+        return KiteConnect.getPosition()
+    }
+
+    fun getPosition(): Flow<List<LocalPosition>> {
         return positionDao.getPosition()
     }
 
+    suspend fun getStopLossInPercent(instrumentToken: String): Double? {
+        return positionDao.getStopLossInPercent(instrumentToken)
+    }
+
+    suspend fun updateStopLossInPercent(instrumentToken: String, stopLossInPercent: Double?) {
+        positionDao.updateStopLossInPercent(instrumentToken, stopLossInPercent)
+    }
+
+    suspend fun getOldStopLossPrice(instrumentToken: String): Double? {
+        return positionDao.getOldStopLossPrice(instrumentToken)
+    }
+
+    suspend fun updateOldStopLossPrice(instrumentToken: String, stopLossPrice: Double?) {
+        positionDao.updateOldStopLossPrice(instrumentToken, stopLossPrice)
+    }
+
+    suspend fun getOldLastPrice(instrumentToken: String): Double {
+        return positionDao.getOldLastPrice(instrumentToken)
+    }
+
+    suspend fun insertOldStopLossPriceAndTrailingStopLossPercent() {
+
+    }
 }
 
 typealias LocalPosition = com.example.smarttrade.db.entity.Position

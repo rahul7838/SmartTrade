@@ -54,4 +54,16 @@ abstract class BaseActivity<VB : ViewDataBinding> : AppCompatActivity() {
             if (isShowProgress) it.visible() else it.gone()
         }
     }
+
+    fun setToolbar(toolbarTitle: String, isVisible: Boolean = true) {
+        when {
+            isVisible -> {
+                setSupportActionBar(activityBaseBinding?.toolbar)
+                supportActionBar?.elevation = 2f
+                supportActionBar?.setTitle(toolbarTitle)
+//                supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            }
+            else -> {Timber.d("isVisible:$isVisible")}
+        }
+    }
 }

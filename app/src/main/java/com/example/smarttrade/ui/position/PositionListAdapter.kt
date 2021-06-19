@@ -6,7 +6,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.view.ActionMode
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -20,14 +19,16 @@ import timber.log.Timber
 class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioViewHolder>() {
 
     var itemLongClickListener: ((position: Position) -> Unit)? = null
-    lateinit var appCompatDelegate: () -> AppCompatDelegate
+    var itemClickListener: ((localPosition: LocalPosition) -> Unit)? = null
+
+    //    lateinit var appCompatDelegate: () -> AppCompatDelegate
     val listOfSelectedItem: MutableList<LocalPosition> = mutableListOf()
-    private val list: MutableList<LocalPosition> = mutableListOf()
-    var isOn = false
+    private val listOfItem: MutableList<LocalPosition> = mutableListOf()
+    var isActionModeOn = false
 
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            isOn = true
+            isActionModeOn = true
             val inflater = mode?.menuInflater
             inflater?.inflate(R.menu.portfolio_menu, menu)
             mode?.title = "Group Item"
@@ -41,21 +42,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             when (item?.itemId) {
                 R.id.combine -> {
-//                onActionClickListener?.invoke()
-                    Timber.d("total list item: ${list.size} ")
-                    Timber.d("new list item: ${listOfSelectedItem.size} ")
-                    var heading: String = ""
-                    listOfSelectedItem.forEach {
-                        heading += (it.tradingSymbol + " ")
-                        list.remove(it)
-                    }
-//                    val position = LocalPosition().apply {
-//                        tradingSymbol = heading
-//                    }
-//                    list.add(position)
-                    Timber.d("after total list item: ${list.size} ")
-                    Timber.d("after new list item: ${listOfSelectedItem.size} ")
-                    Timber.d("onActionItemClicked combine")
+
                 }
             }
 
@@ -64,7 +51,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         }
 
         override fun onDestroyActionMode(mode: ActionMode?) {
-            isOn = false
+            isActionModeOn = false
             listOfSelectedItem.clear()
             notifyDataSetChanged()
             Timber.d("onDestroyActionMode")
@@ -83,16 +70,16 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
 
     override fun onBindViewHolder(holder: PortfolioViewHolder, position: Int) {
         Timber.d("onBindViewHolder")
-        holder.update(list[position])
+        holder.update(listOfItem[position])
     }
 
     override fun getItemCount(): Int {
-        return list.size
+        return listOfItem.size
     }
 
     fun updateList(newList: List<LocalPosition>) {
-        list.clear()
-        list.addAll(newList)
+        listOfItem.clear()
+        listOfItem.addAll(newList)
         notifyDataSetChanged()
     }
 
@@ -103,7 +90,10 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         fun update(position: LocalPosition) {
             viewDataBinding.run {
                 stockName.text = position.tradingSymbol
-//                totalProfitLossAmount.text = position.pnl?.toString()
+                quantityValue.text = position.netQuantity.toString()
+                averageValue.text = position.averagePrice.toString()
+                investedValue.text = position.value.toString()
+                lastTradingPriceValue.text = position.lastPrice.toString()
             }
 
             if (listOfSelectedItem.contains(position)) {
@@ -117,7 +107,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         }
 
         private fun selectItem(item: LocalPosition) {
-            if (isOn) {
+            if (isActionModeOn) {
                 if (listOfSelectedItem.contains(item)) {
                     listOfSelectedItem.remove(item)
                     viewDataBinding.root.setBackgroundColor(Color.WHITE)
@@ -130,22 +120,18 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
 
         private fun onClickListener(position: LocalPosition) {
             viewDataBinding.root.setOnClickListener {
-                if (isOn) {
+                if (isActionModeOn) {
                     selectItem(position)
                 } else {
-                    if(position.tradingSymbol?.split(" ")?.size!! >= 2 ) {
-
-                    }
+                    itemClickListener?.invoke(position)
                 }
             }
         }
 
         private fun onLongClickListener(position: LocalPosition) {
             viewDataBinding.root.setOnLongClickListener {
-                if (!isOn) {
-                    (it.context as AppCompatActivity).startSupportActionMode(
-                        actionModeCallback
-                    )
+                if (!isActionModeOn) {
+                    (it.context as AppCompatActivity).startSupportActionMode(actionModeCallback)
                     selectItem(position)
                 }
                 true

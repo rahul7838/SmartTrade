@@ -1,8 +1,9 @@
 package com.example.smarttrade.extension
 
 import com.example.smarttrade.db.entity.Position
+import com.example.smarttrade.repository.LocalPosition
 
-fun com.zerodhatech.models.Position.parseLocal(): Position {
+fun com.zerodhatech.models.Position.parseLocal(StopLossInPercent: Double? = null, stopLossPrice: Double? = null): LocalPosition {
     return Position(
         product,
         exchange,
@@ -33,11 +34,13 @@ fun com.zerodhatech.models.Position.parseLocal(): Position {
         dayBuyValue,
         daySellValue,
         value,
-        averagePrice
+        averagePrice,
+        StopLossInPercent,
+        stopLossPrice
     )
 }
 
-fun List<com.zerodhatech.models.Position>.parseLocal(): List<Position> {
+fun List<com.zerodhatech.models.Position>.parseLocal(): List<LocalPosition> {
     return this.map {
         it.parseLocal()
     }

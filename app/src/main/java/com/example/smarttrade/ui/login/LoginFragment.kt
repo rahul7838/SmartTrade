@@ -11,6 +11,7 @@ import com.example.smarttrade.R
 import com.example.smarttrade.databinding.FragmentLoginBinding
 import com.example.smarttrade.extension.startActivity
 import com.example.smarttrade.manager.PreferenceManager
+import com.example.smarttrade.services.SmartTradeAlarmManager
 import com.example.smarttrade.ui.base.BaseFragment
 import com.example.smarttrade.ui.position.PortfolioActivity
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException
@@ -62,5 +63,4 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginViewModel>() {
             findNavController().navigate(R.id.action_loginFragment_to_webViewFragment)
         }
     }
-
 }

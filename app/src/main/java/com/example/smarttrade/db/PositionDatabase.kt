@@ -9,7 +9,7 @@ import com.example.smarttrade.db.entity.Group
 import com.example.smarttrade.db.entity.GroupPosition
 import com.example.smarttrade.db.entity.Position
 
-@Database(entities = [Group::class, GroupPosition::class, Position::class], version = 1, exportSchema = true)
+@Database(entities = [Group::class, GroupPosition::class, Position::class], version = 1, exportSchema = false)
 abstract class PositionDatabase : RoomDatabase() {
     abstract fun getPositionDao(): PositionDao
     abstract fun getGroupPositionDao(): GroupPositionDao

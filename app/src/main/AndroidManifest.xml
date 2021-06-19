@@ -34,6 +34,7 @@
         </activity>
         <activity android:name=".ui.position.PortfolioActivity" />
 
+        <receiver android:name=".services.StartUpdatingPositionBroadCastReceiver" />
     </application>
 
 </manifest><!--smarttrade://com.kite.login-->
