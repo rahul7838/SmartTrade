@@ -8,6 +8,7 @@ import androidx.databinding.ViewDataBinding
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityBaseBinding
 import com.example.smarttrade.extension.gone
+import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.visible
 import org.koin.core.component.KoinApiExtension
 import timber.log.Timber
@@ -50,7 +51,7 @@ abstract class BaseActivity<VB : ViewDataBinding> : AppCompatActivity() {
 
     fun setLoader(isShowProgress: Boolean) {
         activityBaseBinding?.frameLayout?.let {
-            Timber.d("progress bar")
+            logI("progress bar: $isShowProgress")
             if (isShowProgress) it.visible() else it.gone()
         }
     }
@@ -63,7 +64,7 @@ abstract class BaseActivity<VB : ViewDataBinding> : AppCompatActivity() {
                 supportActionBar?.setTitle(toolbarTitle)
 //                supportActionBar?.setDisplayHomeAsUpEnabled(true)
             }
-            else -> {Timber.d("isVisible:$isVisible")}
+            else -> {logI("isVisible:$isVisible")}
         }
     }
 }

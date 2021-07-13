@@ -3,9 +3,15 @@ package com.example.smarttrade.ui.position
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.liveData
+import androidx.lifecycle.viewModelScope
+import com.example.smarttrade.extension.calculateTrigger
+import com.example.smarttrade.extension.isBuyCall
+import com.example.smarttrade.extension.logI
 import com.example.smarttrade.repository.KiteConnectRepository
 import com.example.smarttrade.repository.LocalPosition
 import com.example.smarttrade.ui.base.BaseViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinApiExtension
 
@@ -22,12 +28,24 @@ class PositionViewModel(
         }
     }
 
+
     private fun createSession(requestToken: String) {
         ioDispatcher.launch {
             kiteConnectRepository.createSession(requestToken)
             kiteConnectRepository.fetchAndInsertPosition()
         }
     }
+
+    fun refreshPosition() {
+        ioDispatcher.launch {
+            val instrumentToken = kiteConnectRepository.getInstrument()
+            val quotes = kiteConnectRepository.getQuote(instrumentToken)
+            quotes.forEach {
+                calculateTrigger(kiteConnectRepository, it.key, it.value.lastPrice)
+            }
+        }
+    }
+
 
     fun getPosition(): LiveData<List<LocalPosition>> {
         return kiteConnectRepository.getPosition().asLiveData()
@@ -40,17 +58,33 @@ class PositionViewModel(
         stopLoss: Double
     ) {
         ioDispatcher.launch {
-            if (isInPercent) {
-                kiteConnectRepository.updateStopLossInPercent(instrumentToken, stopLoss)
-                val findStopLossValue = lastPrice * (1 - stopLoss / 100)
-                kiteConnectRepository.updateOldStopLossPrice(instrumentToken, findStopLossValue)
+            val isBuyCall = kiteConnectRepository.getNetQuantity(instrumentToken).isBuyCall()
+            if(isBuyCall) {
+                if (isInPercent) {
+                    kiteConnectRepository.updateStopLossInPercent(instrumentToken, stopLoss)
+                    val findStopLossValue = lastPrice * (1 - stopLoss / 100)
+                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, findStopLossValue)
+                } else {
+                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, stopLoss)
+                    val findStopLossInPercent = 100 * (1 - stopLoss / lastPrice)
+                    kiteConnectRepository.updateStopLossInPercent(
+                        instrumentToken,
+                        findStopLossInPercent
+                    )
+                }
             } else {
-                kiteConnectRepository.updateOldStopLossPrice(instrumentToken, stopLoss)
-                val findStopLossInPercent = 100 * (1 - stopLoss / lastPrice)
-                kiteConnectRepository.updateStopLossInPercent(
-                    instrumentToken,
-                    findStopLossInPercent
-                )
+                if (isInPercent) {
+                    kiteConnectRepository.updateStopLossInPercent(instrumentToken, stopLoss)
+                    val findStopLossValue = lastPrice * (1 + stopLoss / 100)
+                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, findStopLossValue)
+                } else {
+                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, stopLoss)
+                    val findStopLossInPercent = 100 * (1 + stopLoss / lastPrice)
+                    kiteConnectRepository.updateStopLossInPercent(
+                        instrumentToken,
+                        findStopLossInPercent
+                    )
+                }
             }
         }
     }
@@ -62,7 +96,12 @@ class PositionViewModel(
         }
     }
 
-    //region
+    override fun onCleared() {
+        super.onCleared()
+        logI("onClear")
+    }
+
+//region
 //    fun createSession(requestToken: String) {
 //        val jobCreateSession = ioDispatcher.launch {
 //            KiteConnect.createSession(requestToken)
@@ -101,5 +140,5 @@ class PositionViewModel(
 //        }
 //
 //    }
-    //endregion
+//endregion
 }

@@ -22,7 +22,7 @@ data class Position(
 
     var m2m: Double? = null,
 
-    var tradingSymbol: String? = null,
+    var tradingSymbol: String,
 
     var netQuantity: Int = 0,
 

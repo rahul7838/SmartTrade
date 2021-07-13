@@ -2,6 +2,7 @@ package com.example.smarttrade.repository
 
 import com.example.smarttrade.KiteConnect
 import com.example.smarttrade.db.dao.PositionDao
+import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.parseLocal
 import com.zerodhatech.models.Position
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +15,7 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
 
     suspend fun createSession(requestToken: String) {
         KiteConnect.createSession(requestToken)
-        Timber.d("session created")
+        logI("session created")
         KiteConnect.sessionExpiryHook()
     }
 
@@ -24,7 +25,8 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
      * @return
      */
     suspend fun fetchAndInsertPosition() {
-        Timber.d("fetch and insert positions")
+        logI("fetch and insert positions")
+//        positionDao.deletePositions() // delete all position before making position call and inserting them
         val positions = KiteConnect.getPosition()
 
         positions.values.forEach {
@@ -49,6 +51,26 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
         //endregion
     }
 
+    fun getQuote(instrumentToken: Array<String>) =
+        KiteConnect.getQuote(instrumentToken)
+
+
+    suspend fun getInstrument(): Array<String> {
+        return positionDao.getInstrument()
+    }
+
+    suspend fun updatePosition(instrumentToken: String, lastPrice: Double) {
+        positionDao.updatePosition(instrumentToken, lastPrice = lastPrice)
+    }
+
+    suspend fun updatePosition(instrumentToken: String, lastPrice: Double, stopLossInPercent: Double, stopLossPrice: Double) {
+        positionDao.updatePosition(instrumentToken, lastPrice, stopLossInPercent, stopLossPrice)
+    }
+
+    suspend fun getNetQuantity(instrumentToken: String): Int {
+        return positionDao.getNetQuantity(instrumentToken)
+    }
+
     suspend fun insertPositionInBatch(positionMap: Map<String, List<Position>>) {
         positionMap.values.forEach {
             positionDao.insertPositions(it.parseLocal())
@@ -56,16 +78,21 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
     }
 
     suspend fun insertPosition(position: LocalPosition) {
+        logI("Position Updated")
         positionDao.insertPosition(position)
     }
 
     suspend fun fetchPosition(): Map<String, List<Position>> {
-        Timber.d("fetch position")
+        logI("fetch position")
         return KiteConnect.getPosition()
     }
 
     fun getPosition(): Flow<List<LocalPosition>> {
         return positionDao.getPosition()
+    }
+
+    suspend fun getPosition(instrumentToken: String): LocalPosition {
+        return positionDao.getPosition(instrumentToken)
     }
 
     suspend fun getStopLossInPercent(instrumentToken: String): Double? {

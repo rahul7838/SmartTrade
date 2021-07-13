@@ -1,24 +1,40 @@
 package com.example.smarttrade
 
+import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.NetworkOnMainThreadException
+import com.example.smarttrade.extension.getExpiryTime
+import com.example.smarttrade.extension.logI
 import com.example.smarttrade.manager.PreferenceManager
+import com.example.smarttrade.services.SmartTradeAlarmManager
+import com.example.smarttrade.ui.login.MainActivity
 import com.zerodhatech.kiteconnect.KiteConnect
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException
+import com.zerodhatech.kiteconnect.kitehttp.exceptions.TokenException
 import com.zerodhatech.models.Position
+import com.zerodhatech.models.Quote
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinApiExtension
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import timber.log.Timber
 import java.io.IOException
+import java.time.LocalTime
 
 @KoinApiExtension
-object KiteConnect {
+object KiteConnect : KoinComponent {
 
+    private val context: Context by inject()
 
     init {
-        Timber.d("Singleton class kite connect created")
+        logI("Singleton class kite connect created")
     }
 
     private val kiteConnect: KiteConnect by lazy {
-        KiteConnect("fwyko6uvpf7r8i07", true)
+        KiteConnect("8tadu34g4bw6hz5c", true)
     }
 
     fun initKitConnect() {
@@ -30,13 +46,33 @@ object KiteConnect {
         return kiteConnect.loginURL
     }
 
+    fun getQuote(instruments: Array<String>): Map<String, Quote> {
+        return try {
+            kiteConnect.getQuote(instruments)
+        } catch (tokenException: TokenException) {
+            CoroutineScope(Dispatchers.Main).launch {
+                logI("$tokenException")
+                SmartTradeAlarmManager.stopUpdatingPosition()
+                PreferenceManager.setUserLoggedIn(false)
+                val intent = Intent(context, MainActivity::class.java)
+                intent.flags = FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+            }
+            tokenException.printStackTrace()
+            emptyMap()
+        }
+    }
+
     @Throws(NetworkOnMainThreadException::class)
     fun createSession(requestToken: String) {
         try {
-            val user = kiteConnect.generateSession(requestToken, "os0xtu7l5mkzvtfp281skxyy4iatqrnz")
+            val user = kiteConnect.generateSession(requestToken, "2z4p8vzajhsw81w4kltbatc3ce4ghkto")
             user.accessToken.also {
                 PreferenceManager.setAccessToken(it)
+                PreferenceManager.setAccessTokenExpiryTime(getExpiryTime())
                 kiteConnect.accessToken = it
+                logI("access token $it")
+                logI("expiryTime ${PreferenceManager.getAccessTokenExpiryTime()}")
             }
             kiteConnect.publicToken = user.publicToken
         } catch (ioException: IOException) {
@@ -50,7 +86,20 @@ object KiteConnect {
 
     @Throws(NetworkOnMainThreadException::class)
     fun getPosition(): Map<String, List<Position>> {
-        return kiteConnect.positions
+        return try {
+            kiteConnect.positions
+        } catch (tokenException: TokenException) {
+            CoroutineScope(Dispatchers.Main).launch {
+                logI("$tokenException")
+                SmartTradeAlarmManager.stopUpdatingPosition()
+                PreferenceManager.setUserLoggedIn(false)
+                val intent = Intent(context, MainActivity::class.java)
+                intent.flags = FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(intent)
+            }
+            tokenException.printStackTrace()
+            emptyMap()
+        }
     }
 
     fun sessionExpiryHook() {
@@ -70,5 +119,13 @@ object KiteConnect {
     fun finalize() {
         // finalization logic
         Timber.d("Before garbage collection")
+    }
+
+    fun handleTokenFailure() {
+        try {
+
+        } catch (tokenException: TokenException) {
+
+        }
     }
 }

@@ -3,19 +3,20 @@ package com.example.smarttrade.ui.login
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.os.bundleOf
-import androidx.navigation.findNavController
 import com.example.smarttrade.KiteConnect
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityMainBinding
+import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.startActivity
+import com.example.smarttrade.manager.PreferenceManager
+import com.example.smarttrade.services.SmartTradeAlarmManager
 import com.example.smarttrade.ui.base.BaseActivity
 import com.example.smarttrade.ui.base.BaseViewModel
 import com.example.smarttrade.ui.position.PortfolioActivity
 import com.example.smarttrade.util.REQUEST_TOKEN
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinApiExtension
-import timber.log.Timber
+import java.time.Instant
 
 @KoinApiExtension
 class MainActivity : BaseActivity<ActivityMainBinding>() {
@@ -28,21 +29,41 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setSupportActionBar(activityBaseBinding?.toolbar)
-        setActionBarTitle("Rahul")
+        setToolbar("SmartTrade")
+//        if(PreferenceManager.getUserLoggedIn()) {
+            val expiryTime = PreferenceManager.getAccessTokenExpiryTime()
+            val currentTime = Instant.now().epochSecond
+            if(expiryTime < currentTime) {
+                //token is expired
+                PreferenceManager.setUserLoggedIn(false)
+            } else {
+                val accessToken = PreferenceManager.getAccessToken()
+                KiteConnect.setAccessToken(accessToken)
+                startActivity<PortfolioActivity>()
+                finish()
+            }
+//        }
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        Timber.d("executed")
+        logI("executed")
         val requestToken = intent?.data?.getQueryParameter("request_token")
         val bundle = bundleOf(REQUEST_TOKEN to requestToken)
+        PreferenceManager.setUserLoggedIn(true)
+//        setAlarmToUpdatePosition()
         startActivity<PortfolioActivity>(bundle)
+        finish()
     }
 
-    private fun setActionBarTitle(title: String) {
-        actionBar?.title = title
+    private fun setAlarmToUpdatePosition() {
+//        val calender = Calendar.getInstance()
+//        val dayOfWeek = calender.get(Calendar.DAY_OF_WEEK)
+//        if( dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY) {
+            SmartTradeAlarmManager.scheduleTask()
+//        }
     }
+
 }
 
 //https://com.kite.login/?request_token=xa1JmvuUU6FyguvzSow2EOaxkk8iYOWS&action=login&status=success

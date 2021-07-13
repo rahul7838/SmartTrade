@@ -8,7 +8,7 @@
 
     <application
         android:name=".SmartTradeApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -24,15 +24,18 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
                     android:host="com.kite.login"
+                    android:pathPrefix="/"
                     android:scheme="https" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.position.PortfolioActivity" />
+        <activity android:name=".ui.position.PortfolioActivity"
+            android:launchMode="singleTask"/>
 
         <receiver android:name=".services.StartUpdatingPositionBroadCastReceiver" />
     </application>

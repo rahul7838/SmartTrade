@@ -6,19 +6,14 @@ import androidx.navigation.findNavController
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityPortfolioBinding
 import com.example.smarttrade.manager.PreferenceManager
-import com.example.smarttrade.services.SmartTradeAlarmManager
 import com.example.smarttrade.ui.base.BaseActivity
 import com.example.smarttrade.ui.base.BaseViewModel
 import com.example.smarttrade.util.REQUEST_TOKEN
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinApiExtension
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
-import java.time.DayOfWeek
-import java.util.*
-import java.util.Calendar.*
 
 @KoinApiExtension
 class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>(),
@@ -37,16 +32,9 @@ class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>(),
             ?: if (PreferenceManager.getUserLoggedIn()) null else throw IllegalStateException("Request token can not be null") // must be before super.onCreate()
         super.onCreate(savedInstanceState)
         viewBinding?.bottomNavigation?.setOnNavigationItemSelectedListener(this)
-        setAlarmToUpdatePosition()
     }
 
-    private fun setAlarmToUpdatePosition() {
-        val calender = Calendar.getInstance()
-        val dayOfWeek = calender.get(DAY_OF_WEEK)
-        if( dayOfWeek != SATURDAY && dayOfWeek != SUNDAY) {
-            SmartTradeAlarmManager.startUpdatingPosition()
-        }
-    }
+
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
 

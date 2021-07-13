@@ -11,9 +11,12 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.PortfolioRecyclerItemBinding
+import com.example.smarttrade.extension.invisible
+import com.example.smarttrade.extension.visible
 import com.example.smarttrade.repository.LocalPosition
 import com.zerodhatech.models.Position
 import timber.log.Timber
+import java.text.DecimalFormat
 
 
 class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioViewHolder>() {
@@ -30,7 +33,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
             isActionModeOn = true
             val inflater = mode?.menuInflater
-            inflater?.inflate(R.menu.portfolio_menu, menu)
+            inflater?.inflate(R.menu.portfolio_menu_multi_select, menu)
             mode?.title = "Group Item"
             return true
         }
@@ -87,6 +90,8 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
     inner class PortfolioViewHolder(private val viewDataBinding: PortfolioRecyclerItemBinding) :
         RecyclerView.ViewHolder(viewDataBinding.root) {
 
+        val decimalFormat = DecimalFormat("##,##,###.##")
+
         fun update(position: LocalPosition) {
             viewDataBinding.run {
                 stockName.text = position.tradingSymbol
@@ -94,6 +99,14 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
                 averageValue.text = position.averagePrice.toString()
                 investedValue.text = position.value.toString()
                 lastTradingPriceValue.text = position.lastPrice.toString()
+                if(position.stopLossPrice != null) {
+                    stpl.visible()
+                    stplValue.visible()
+                    stplValue.text = decimalFormat.format(position.stopLossPrice)
+                } else {
+                    stpl.invisible()
+                    stplValue.invisible()
+                }
             }
 
             if (listOfSelectedItem.contains(position)) {

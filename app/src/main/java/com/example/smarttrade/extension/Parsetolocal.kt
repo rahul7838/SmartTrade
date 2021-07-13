@@ -3,7 +3,7 @@ package com.example.smarttrade.extension
 import com.example.smarttrade.db.entity.Position
 import com.example.smarttrade.repository.LocalPosition
 
-fun com.zerodhatech.models.Position.parseLocal(StopLossInPercent: Double? = null, stopLossPrice: Double? = null): LocalPosition {
+fun com.zerodhatech.models.Position.parseLocal(stopLossInPercent: Double? = null, stopLossPrice: Double? = null): LocalPosition {
     return Position(
         product,
         exchange,
@@ -35,7 +35,7 @@ fun com.zerodhatech.models.Position.parseLocal(StopLossInPercent: Double? = null
         daySellValue,
         value,
         averagePrice,
-        StopLossInPercent,
+        stopLossInPercent,
         stopLossPrice
     )
 }

@@ -9,6 +9,7 @@ import com.example.smarttrade.BR
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.FragmentPositionBottomSheetBinding
 import com.example.smarttrade.extension.getViewDataBinding
+import com.example.smarttrade.extension.toDouble
 import com.example.smarttrade.repository.LocalPosition
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
@@ -55,7 +56,7 @@ class PositionBottomSheetFragment : BottomSheetDialogFragment() {
                 R.id.stop_loss_in_percent_radio_btn -> {isStopLossInPercent = true}
                 else -> Toast.makeText(requireContext(), "Please select Radio Button", Toast.LENGTH_SHORT).show()
             }
-            val stopLoss = viewDataBinding.stopLossInPercent.text.toString().toDouble()
+            val stopLoss = viewDataBinding.stopLossInPercent.text.toString().toDouble("stop loss can not be empty", requireContext())
             viewModel.updateStopLoss(localPosition.instrumentToken, localPosition.lastPrice, isStopLossInPercent, stopLoss)
             Toast.makeText(requireContext(), "Stop Loss Updated!!", Toast.LENGTH_SHORT).show()
             dismiss()
