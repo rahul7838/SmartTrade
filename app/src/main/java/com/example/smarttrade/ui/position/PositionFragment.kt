@@ -1,7 +1,9 @@
 package com.example.smarttrade.ui.position
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
 import androidx.recyclerview.widget.RecyclerView
@@ -10,12 +12,10 @@ import com.example.smarttrade.BR
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.FragmentPositionBinding
 import com.example.smarttrade.extension.logI
-import com.example.smarttrade.manager.PreferenceManager
-import com.example.smarttrade.services.SmartTradeAlarmManager
+import com.example.smarttrade.services.PositionUpdateService
 import com.example.smarttrade.ui.base.BaseFragment
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.core.component.KoinApiExtension
-import timber.log.Timber
 
 @KoinApiExtension
 class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel>(), SwipeRefreshLayout.OnRefreshListener {
@@ -38,7 +38,7 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
         initRecycler()
         initObserver()
         setHasOptionsMenu(true)
-        parentActivity.setToolbar("Positions")
+        parentActivity.setToolbar(getString(R.string.positions))
     }
 
     private fun initRecycler() {
@@ -81,15 +81,14 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
         when(item.itemId) {
             R.id.update_position -> {
                 logI("start position update")
-                SmartTradeAlarmManager.scheduleTask()
+                val intent = Intent(requireContext(), PositionUpdateService::class.java)
+                ContextCompat.startForegroundService(requireContext(), intent)
             }
             R.id.stop_update -> {
                 logI("stop position update")
-                SmartTradeAlarmManager.stopUpdatingPosition()
-            }
-            R.id.expire_token -> {
-                logI("expire token")
-                PreferenceManager.setAccessToken("12")
+                val intent = Intent(requireContext(), PositionUpdateService::class.java)
+                requireContext().stopService(intent)
+//                SmartTradeAlarmManager.stopUpdatingPosition()
             }
         }
         return true

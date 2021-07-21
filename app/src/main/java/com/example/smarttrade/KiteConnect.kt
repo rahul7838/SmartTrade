@@ -2,6 +2,7 @@ package com.example.smarttrade
 
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.NetworkOnMainThreadException
 import com.example.smarttrade.extension.getExpiryTime
@@ -22,7 +23,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 import java.io.IOException
-import java.time.LocalTime
 
 @KoinApiExtension
 object KiteConnect : KoinComponent {
@@ -37,30 +37,12 @@ object KiteConnect : KoinComponent {
         KiteConnect("8tadu34g4bw6hz5c", true)
     }
 
-    fun initKitConnect() {
-        kiteConnect.userId = ""
-        val url = kiteConnect.loginURL
-    }
-
     fun getLoginUrl(): String {
         return kiteConnect.loginURL
     }
 
     fun getQuote(instruments: Array<String>): Map<String, Quote> {
-        return try {
-            kiteConnect.getQuote(instruments)
-        } catch (tokenException: TokenException) {
-            CoroutineScope(Dispatchers.Main).launch {
-                logI("$tokenException")
-                SmartTradeAlarmManager.stopUpdatingPosition()
-                PreferenceManager.setUserLoggedIn(false)
-                val intent = Intent(context, MainActivity::class.java)
-                intent.flags = FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
-            }
-            tokenException.printStackTrace()
-            emptyMap()
-        }
+        return fetch { kiteConnect.getQuote(instruments) }
     }
 
     @Throws(NetworkOnMainThreadException::class)
@@ -86,20 +68,7 @@ object KiteConnect : KoinComponent {
 
     @Throws(NetworkOnMainThreadException::class)
     fun getPosition(): Map<String, List<Position>> {
-        return try {
-            kiteConnect.positions
-        } catch (tokenException: TokenException) {
-            CoroutineScope(Dispatchers.Main).launch {
-                logI("$tokenException")
-                SmartTradeAlarmManager.stopUpdatingPosition()
-                PreferenceManager.setUserLoggedIn(false)
-                val intent = Intent(context, MainActivity::class.java)
-                intent.flags = FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
-            }
-            tokenException.printStackTrace()
-            emptyMap()
-        }
+        return fetch { kiteConnect.positions }
     }
 
     fun sessionExpiryHook() {
@@ -121,11 +90,27 @@ object KiteConnect : KoinComponent {
         Timber.d("Before garbage collection")
     }
 
-    fun handleTokenFailure() {
-        try {
-
+    @Suppress("UNCHECKED_CAST")
+    private inline fun <K, V> fetch(action: () -> Map<K, V>): Map<K, V> {
+        var result = mapOf<Any, Any>() as Map<K, V>
+        return try {
+            result = action()
+            result
         } catch (tokenException: TokenException) {
+            handleTokenFailure(tokenException)
+            tokenException.printStackTrace()
+            result
+        }
+    }
 
+    private fun handleTokenFailure(tokenException: TokenException) {
+        logI("$tokenException")
+        CoroutineScope(Dispatchers.Main).launch {
+            SmartTradeAlarmManager.stopUpdatingPosition()
+            PreferenceManager.setUserLoggedIn(false)
+            val intent = Intent(context, MainActivity::class.java)
+            intent.flags = FLAG_ACTIVITY_NEW_TASK or FLAG_ACTIVITY_CLEAR_TASK
+            context.startActivity(intent)
         }
     }
 }

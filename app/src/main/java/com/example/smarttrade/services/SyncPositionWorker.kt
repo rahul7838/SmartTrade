@@ -16,6 +16,7 @@ import timber.log.Timber
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 
 @KoinApiExtension
@@ -23,12 +24,11 @@ class SyncPositionWorker(context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params), KoinComponent {
 
     private val kiteConnectRepository: KiteConnectRepository by inject()
-    var now1 = 0L
     override suspend fun doWork(): Result {
         logI("do work")
-        now1 = Instant.now().epochSecond - now1
-        val inMin = now1/60
-        logI("Minutes $inMin")
+        val hr = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val min = Calendar.getInstance().get(Calendar.MINUTE)
+        logI("Minutes $hr:hr$min:min")
         val instrument = kiteConnectRepository.getInstrument()
         val quotes = kiteConnectRepository.getQuote(instrument)
         quotes.forEach {
@@ -36,6 +36,4 @@ class SyncPositionWorker(context: Context, params: WorkerParameters) :
         }
         return Result.success()
     }
-
-
 }

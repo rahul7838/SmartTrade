@@ -18,6 +18,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinApiExtension
 import java.time.Instant
 
+private const val QUERY_PARAMETER_REQUEST_TOKEN = "request_token"
 @KoinApiExtension
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
@@ -29,8 +30,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setToolbar("SmartTrade")
-//        if(PreferenceManager.getUserLoggedIn()) {
+        setToolbar(this.resources.getString(R.string.app_name))
+        if(PreferenceManager.getUserLoggedIn()) {
             val expiryTime = PreferenceManager.getAccessTokenExpiryTime()
             val currentTime = Instant.now().epochSecond
             if(expiryTime < currentTime) {
@@ -42,26 +43,21 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 startActivity<PortfolioActivity>()
                 finish()
             }
-//        }
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         logI("executed")
-        val requestToken = intent?.data?.getQueryParameter("request_token")
+        val requestToken = intent?.data?.getQueryParameter(QUERY_PARAMETER_REQUEST_TOKEN)
         val bundle = bundleOf(REQUEST_TOKEN to requestToken)
         PreferenceManager.setUserLoggedIn(true)
-//        setAlarmToUpdatePosition()
         startActivity<PortfolioActivity>(bundle)
         finish()
     }
 
     private fun setAlarmToUpdatePosition() {
-//        val calender = Calendar.getInstance()
-//        val dayOfWeek = calender.get(Calendar.DAY_OF_WEEK)
-//        if( dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY) {
-            SmartTradeAlarmManager.scheduleTask()
-//        }
+
     }
 
 }

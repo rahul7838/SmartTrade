@@ -7,7 +7,6 @@ import com.example.smarttrade.extension.parseLocal
 import com.zerodhatech.models.Position
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.component.KoinApiExtension
-import timber.log.Timber
 
 
 @KoinApiExtension
@@ -26,29 +25,26 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
      */
     suspend fun fetchAndInsertPosition() {
         logI("fetch and insert positions")
-//        positionDao.deletePositions() // delete all position before making position call and inserting them
         val positions = KiteConnect.getPosition()
-
+        val oldInstrumentToken = positionDao.getInstrument()
+        val newInstrumentToken = arrayListOf<String>()
+        positions.values.forEach { list ->
+            list.forEach {
+                newInstrumentToken.add(it.instrumentToken)
+            }
+        }
+        oldInstrumentToken.forEach {
+            if(!newInstrumentToken.contains(it)) {
+                deletePositionByInstrumentToken(it)
+            }
+        }
         positions.values.forEach {
             positionDao.insertPositions(it.parseLocal())
         }
-        //region
-//        positions.values.forEach {
-//            Timber.d("hashmap %s", positions.keys.size)
-//            it.forEach {
-//                Timber.d(it.run {
-//                    "product:$product " + "exchange:$exchange" + "sellValue:$sellValue" + "lastPrice:$lastPrice " + "unrealised:$unrealised " + "buyPrice:$buyPrice " +
-//                            "sellPrice:$sellPrice " + "m2m:$m2m " + "tradingSymbol:$tradingSymbol " + "netQuantity:$netQuantity " +
-//                            "sellQuantity:$sellQuantity " + "realised:$realised " + "buyQuantity:$buyQuantity " +
-//                            "netValue:$netValue " + "buyValue$buyValue " + "multiplier:$multiplier " + "instrumentToken:$instrumentToken " +
-//                            "closePrice:$closePrice " + "pnl:$pnl " + "overnightQuantity:$overnightQuantity " + "buym2m:$buym2m " +
-//                            "sellm2m:$sellm2m " + "dayBuyQuantity:$dayBuyQuantity " + "daySellQuantity:$daySellQuantity " +
-//                            "dayBuyPrice:$dayBuyPrice " + "daySellPrice:$daySellPrice " + "dayBuyValue:$dayBuyValue " +
-//                            "daySellValue:$daySellValue " + "value:$value " + "averagePrice$averagePrice "
-//                })
-//            }
-//        }
-        //endregion
+    }
+
+    suspend fun deletePositionByInstrumentToken(instrumentToken: String) {
+        positionDao.deletePositionByInstrumentToken(instrumentToken)
     }
 
     fun getQuote(instrumentToken: Array<String>) =
@@ -121,3 +117,21 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
 }
 
 typealias LocalPosition = com.example.smarttrade.db.entity.Position
+
+//region
+//        positions.values.forEach {
+//            Timber.d("hashmap %s", positions.keys.size)
+//            it.forEach {
+//                Timber.d(it.run {
+//                    "product:$product " + "exchange:$exchange" + "sellValue:$sellValue" + "lastPrice:$lastPrice " + "unrealised:$unrealised " + "buyPrice:$buyPrice " +
+//                            "sellPrice:$sellPrice " + "m2m:$m2m " + "tradingSymbol:$tradingSymbol " + "netQuantity:$netQuantity " +
+//                            "sellQuantity:$sellQuantity " + "realised:$realised " + "buyQuantity:$buyQuantity " +
+//                            "netValue:$netValue " + "buyValue$buyValue " + "multiplier:$multiplier " + "instrumentToken:$instrumentToken " +
+//                            "closePrice:$closePrice " + "pnl:$pnl " + "overnightQuantity:$overnightQuantity " + "buym2m:$buym2m " +
+//                            "sellm2m:$sellm2m " + "dayBuyQuantity:$dayBuyQuantity " + "daySellQuantity:$daySellQuantity " +
+//                            "dayBuyPrice:$dayBuyPrice " + "daySellPrice:$daySellPrice " + "dayBuyValue:$dayBuyValue " +
+//                            "daySellValue:$daySellValue " + "value:$value " + "averagePrice$averagePrice "
+//                })
+//            }
+//        }
+//endregion

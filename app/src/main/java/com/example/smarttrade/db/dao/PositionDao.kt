@@ -55,4 +55,7 @@ interface PositionDao {
 
     @Query("UPDATE Position SET stopLossInPercent=:stopLossPriceInPercent WHERE instrumentToken=:instrumentToken")
     suspend fun updateStopLossInPercent(instrumentToken: String, stopLossPriceInPercent: Double?)
+
+    @Query("Delete from Position where instrumentToken=:instrumentToken")
+    suspend fun deletePositionByInstrumentToken(instrumentToken: String)
 }

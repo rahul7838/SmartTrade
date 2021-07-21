@@ -14,4 +14,5 @@
     <string name="position">Position</string>
     <string name="group">Group</string>
     <string name="start_position_update">Start Position Update</string>
+    <string name="positions">Positions</string>
 </resources>

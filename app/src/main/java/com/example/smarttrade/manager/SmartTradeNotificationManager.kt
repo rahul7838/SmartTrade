@@ -27,35 +27,37 @@ object SmartTradeNotificationManager : KoinComponent {
         )
     }
 
-    private fun createChannel() {
-        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
-            val notificationChannel =
-                NotificationChannel("channelId", "Notification", IMPORTANCE_HIGH)
-            notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            notificationManager.createNotificationChannel(notificationChannel)
+    fun buildNotification(stopLossPrice: String, positionName: String) {
+        val notification = getNotification("$positionName triggered at stop loss price $stopLossPrice")
+        val random = Random(1000)
+        with(NotificationManagerCompat.from(context)) {
+            notify(random.nextInt(), notification)
         }
-
     }
 
-    fun buildNotification(stopLossPrice: String, positionName: String) {
+    fun getNotification(descriptionText: String): Notification {
         createChannel()
         val intent = Intent(context, PortfolioActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
-
-        val notificationBuilder = NotificationCompat.Builder(context, "notify001")
+        return NotificationCompat.Builder(context, "notify001")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Stop loss triggered")
-            .setContentText("$positionName stoploss triggered at $stopLossPrice")
+            .setContentTitle(context.resources.getString(R.string.app_name))
+            .setContentText(descriptionText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setChannelId("channelId")
-        val random = Random(1000)
-        with(NotificationManagerCompat.from(context)) {
-            notify(random.nextInt(), notificationBuilder.build())
+            .build()
+    }
+
+    private fun createChannel() {
+        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
+            val notificationChannel = NotificationChannel("channelId", "Notification", IMPORTANCE_HIGH)
+            notificationChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            notificationManager.createNotificationChannel(notificationChannel)
         }
     }
 }
