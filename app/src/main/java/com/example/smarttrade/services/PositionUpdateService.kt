@@ -8,6 +8,7 @@ import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.startCoroutineTimer
 import com.example.smarttrade.manager.SmartTradeNotificationManager
 import com.example.smarttrade.repository.KiteConnectRepository
+import com.example.smarttrade.repository.StopLossRepository
 import com.example.smarttrade.util.Constants
 import org.koin.core.component.KoinApiExtension
 import org.koin.core.component.KoinComponent
@@ -19,6 +20,7 @@ private const val TWO_MIN = 2*60*1000L
 class PositionUpdateService : Service(), KoinComponent {
 
     private val kiteConnectRepository: KiteConnectRepository by inject()
+    private val stopLossRepository: StopLossRepository by inject()
 
     override fun onCreate() {
         super.onCreate()
@@ -40,7 +42,7 @@ class PositionUpdateService : Service(), KoinComponent {
             val instrument = kiteConnectRepository.getInstrument()
             val quotes = kiteConnectRepository.getQuote(instrument)
             quotes.forEach {
-                calculateTrigger(kiteConnectRepository, it.key, it.value.lastPrice)
+                calculateTrigger(kiteConnectRepository, stopLossRepository, it.key, it.value.lastPrice)
             }
         }
     }

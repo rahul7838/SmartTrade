@@ -9,6 +9,7 @@
     </data>
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/mtrl_card_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -25,12 +26,20 @@
             android:layout_height="match_parent"
             android:layout_marginBottom="16dp">
 
+            <androidx.constraintlayout.widget.Group
+                android:id="@+id/recycler_item_visibility_grp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:constraint_referenced_ids="quantity,average_value, invested_value, last_trading_price_value, average, last_trading_price, invested"/>
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/stock_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                app:layout_constraintBottom_toTopOf="@+id/invested"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/quantity_value"
                 tools:text="BAJFINANCE" />
@@ -42,7 +51,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="8dp"
-                android:text="55"
+                tools:text="55"
                 app:layout_constraintEnd_toStartOf="@+id/quantity"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -58,7 +67,7 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/textView3"
+                android:id="@+id/average"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="32dp"
@@ -73,8 +82,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="16dp"
-                android:text="537.24"
-                app:layout_constraintStart_toEndOf="@+id/textView3"
+                tools:text="537.24"
+                app:layout_constraintStart_toEndOf="@+id/average"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
@@ -82,17 +91,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginBottom="16dp"
-                android:text="Invested"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/invested_value"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/stock_name"
-                tools:text="Invested" />
+                android:text="Invested" />
 
             <TextView
                 android:id="@+id/invested_value"
@@ -120,7 +127,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="16dp"
-                android:text="960.60"
+                tools:text="960.60"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
@@ -140,9 +147,31 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
-                android:text="325"
+                tools:text="325"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/pnl"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="P/L"
+                app:layout_constraintBottom_toTopOf="@+id/last_trading_price"
+                app:layout_constraintEnd_toStartOf="@+id/pnl_value"
+                app:layout_constraintTop_toBottomOf="@+id/stpl" />
+
+            <TextView
+                android:id="@+id/pnl_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                tools:text="-1000000000"
+                app:layout_constraintBottom_toTopOf="@+id/last_trading_price"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/stpl" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

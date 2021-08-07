@@ -2,6 +2,8 @@ package com.example.smarttrade.repository
 
 import com.example.smarttrade.KiteConnect
 import com.example.smarttrade.db.dao.PositionDao
+import com.example.smarttrade.db.dao.StopLossDao
+import com.example.smarttrade.db.entity.PositionWithStopLoss
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.parseLocal
 import com.zerodhatech.models.Position
@@ -10,7 +12,8 @@ import org.koin.core.component.KoinApiExtension
 
 
 @KoinApiExtension
-class KiteConnectRepository(private val positionDao: PositionDao) {
+class KiteConnectRepository(
+    private val positionDao: PositionDao) {
 
     suspend fun createSession(requestToken: String) {
         KiteConnect.createSession(requestToken)
@@ -28,23 +31,74 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
         val positions = KiteConnect.getPosition()
         val oldInstrumentToken = positionDao.getInstrument()
         val newInstrumentToken = arrayListOf<String>()
-        positions.values.forEach { list ->
-            list.forEach {
-                newInstrumentToken.add(it.instrumentToken)
+        if(oldInstrumentToken.isEmpty()) {
+            positions.values.forEach {
+                positionDao.insertPositions(it.parseLocal())
+            }
+        } else {
+            positions.values.forEach { list ->
+                list.forEach {
+                    newInstrumentToken.add(it.instrumentToken)
+                }
+            }
+            oldInstrumentToken.forEach {
+                if(!newInstrumentToken.contains(it)) {
+                    deletePositionByInstrumentToken(it)
+                }
+            }
+            positions.values.forEach {
+                it.forEach { position ->
+                    positionDao.updateOrInsert(position)
+                }
             }
         }
-        oldInstrumentToken.forEach {
-            if(!newInstrumentToken.contains(it)) {
-                deletePositionByInstrumentToken(it)
-            }
-        }
-        positions.values.forEach {
-            positionDao.insertPositions(it.parseLocal())
+    }
+
+    suspend fun updatePosition(
+        position: Position
+    ) {
+        position.run {
+            positionDao.updatePosition(
+                product,
+                exchange,
+                sellValue,
+                lastPrice,
+                unrealised,
+                buyPrice,
+                sellPrice,
+                m2m,
+                tradingSymbol,
+                netQuantity,
+                sellQuantity,
+                realised,
+                buyQuantity,
+                netValue,
+                buyValue,
+                multiplier,
+                instrumentToken,
+                closePrice,
+                pnl,
+                overnightQuantity,
+                buym2m,
+                sellm2m,
+                dayBuyQuantity,
+                daySellQuantity,
+                dayBuyPrice,
+                daySellPrice,
+                dayBuyValue,
+                daySellValue,
+                value,
+                averagePrice,
+            )
         }
     }
 
     suspend fun deletePositionByInstrumentToken(instrumentToken: String) {
         positionDao.deletePositionByInstrumentToken(instrumentToken)
+    }
+
+    suspend fun getTime(): Long {
+        return positionDao.getTime()
     }
 
     fun getQuote(instrumentToken: Array<String>) =
@@ -55,12 +109,12 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
         return positionDao.getInstrument()
     }
 
-    suspend fun updatePosition(instrumentToken: String, lastPrice: Double) {
-        positionDao.updatePosition(instrumentToken, lastPrice = lastPrice)
+    suspend fun updatePosition(instrumentToken: String, lastPrice: Double, updateAt: Long, pnl: Double) {
+        positionDao.updatePosition(instrumentToken, lastPrice = lastPrice, updateAt, pnl)
     }
 
-    suspend fun updatePosition(instrumentToken: String, lastPrice: Double, stopLossInPercent: Double, stopLossPrice: Double) {
-        positionDao.updatePosition(instrumentToken, lastPrice, stopLossInPercent, stopLossPrice)
+    suspend fun updateLastPriceAndStopLoss(instrumentToken: String, lastPrice: Double, pnl: Double, stopLossInPercent: Double?, stopLossPrice: Double?, stopLossAmount: Double? = null, updatedAt: Long) {
+        positionDao.updateLastPriceAndStopLoss(instrumentToken, lastPrice, pnl, stopLossInPercent, stopLossPrice, stopLossAmount, updatedAt)
     }
 
     suspend fun getNetQuantity(instrumentToken: String): Int {
@@ -83,7 +137,7 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
         return KiteConnect.getPosition()
     }
 
-    fun getPosition(): Flow<List<LocalPosition>> {
+    fun getPosition(): Flow<List<PositionWithStopLoss>> {
         return positionDao.getPosition()
     }
 
@@ -91,28 +145,8 @@ class KiteConnectRepository(private val positionDao: PositionDao) {
         return positionDao.getPosition(instrumentToken)
     }
 
-    suspend fun getStopLossInPercent(instrumentToken: String): Double? {
-        return positionDao.getStopLossInPercent(instrumentToken)
-    }
-
-    suspend fun updateStopLossInPercent(instrumentToken: String, stopLossInPercent: Double?) {
-        positionDao.updateStopLossInPercent(instrumentToken, stopLossInPercent)
-    }
-
-    suspend fun getOldStopLossPrice(instrumentToken: String): Double? {
-        return positionDao.getOldStopLossPrice(instrumentToken)
-    }
-
-    suspend fun updateOldStopLossPrice(instrumentToken: String, stopLossPrice: Double?) {
-        positionDao.updateOldStopLossPrice(instrumentToken, stopLossPrice)
-    }
-
     suspend fun getOldLastPrice(instrumentToken: String): Double {
         return positionDao.getOldLastPrice(instrumentToken)
-    }
-
-    suspend fun insertOldStopLossPriceAndTrailingStopLossPercent() {
-
     }
 }
 

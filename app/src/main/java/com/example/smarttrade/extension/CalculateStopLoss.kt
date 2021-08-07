@@ -2,38 +2,107 @@ package com.example.smarttrade.extension
 
 import com.example.smarttrade.manager.SmartTradeNotificationManager
 import com.example.smarttrade.repository.KiteConnectRepository
+import com.example.smarttrade.repository.StopLossRepository
 import org.koin.core.component.KoinApiExtension
+import java.time.Instant
 
 @KoinApiExtension
-suspend fun calculateTrigger(kiteConnectRepository: KiteConnectRepository, instrumentToken: String, lastPrice: Double) {
+suspend fun calculateTrigger(
+    kiteConnectRepository: KiteConnectRepository,
+    stopLossRepository: StopLossRepository,
+    instrumentToken: String,
+    lastPrice: Double
+) {
 //    logI("calculate trigger")
     val position = kiteConnectRepository.getPosition(instrumentToken)
-    val isPositionBuyCall = position.netQuantity.isBuyCall()// if we have buy the share trailing stop loss will be x% less than last/current price
+    val isPositionBuyCall =
+        position.netQuantity.isBuyCall()// if we have buy the share trailing stop loss will be x% less than last/current price
 //    logI("isBuyCall: $isPositionBuyCall")
     val trailingStopLossInPercent =
-        kiteConnectRepository.getStopLossInPercent(instrumentToken)
+        stopLossRepository.getStopLossInPercent(instrumentToken)
 //    logI("Trailing stop loss: $trailingStopLossInPercent")
-
+    val updatedAt = Instant.now().toEpochMilli()
+    val stopLossAmount = stopLossRepository.getStopLossAmount(instrumentToken)
+    val newPnl = ((lastPrice - position.averagePrice) * position.netQuantity)
     if (trailingStopLossInPercent == null) {
-        kiteConnectRepository.updatePosition(instrumentToken, lastPrice)
+        kiteConnectRepository.updatePosition(instrumentToken, lastPrice, updatedAt, newPnl)
+    } else if (stopLossAmount != null) {
+        if (newPnl <= stopLossAmount) {
+            SmartTradeNotificationManager.buildStopLossAmountNotification(
+                stopLossAmount = stopLossAmount.toString(),
+                position.tradingSymbol
+            )
+            kiteConnectRepository.updatePosition(instrumentToken, lastPrice, updatedAt, newPnl)
+        } else {
+            val newStopLossAmount = newPnl + trailingStopLossInPercent
+            val maxOfStopLossAmount = maxOf(newStopLossAmount, stopLossAmount)
+            kiteConnectRepository.updateLastPriceAndStopLoss(
+                instrumentToken,
+                lastPrice,
+                newPnl,
+                trailingStopLossInPercent,
+                null,
+                maxOfStopLossAmount,
+                updatedAt
+            )
+        }
     } else {
-//        logI("Last Price: $lastPrice")
-        val oldStopLossPrice = kiteConnectRepository.getOldStopLossPrice(instrumentToken) ?: 0.0
+        val oldStopLossPrice = stopLossRepository.getStopLossPrice(instrumentToken) ?: 0.0
         if (isPositionBuyCall) {
             if (oldStopLossPrice >= lastPrice) {
-                SmartTradeNotificationManager.buildNotification(stopLossPrice = oldStopLossPrice.toString(), position.tradingSymbol)
+                SmartTradeNotificationManager.buildStopLossPriceNotification(
+                    stopLossPrice = oldStopLossPrice.toString(),
+                    position.tradingSymbol
+                )
+                kiteConnectRepository.updateLastPriceAndStopLoss(
+                    instrumentToken,
+                    lastPrice,
+                    newPnl,
+                    trailingStopLossInPercent,
+                    oldStopLossPrice,
+                    null,
+                    updatedAt
+                )
             } else {
                 val newStopLossPrice = lastPrice * (1 - trailingStopLossInPercent / 100)
                 val maxOfStopLossPrice = maxOf(oldStopLossPrice, newStopLossPrice)
-                kiteConnectRepository.updatePosition(instrumentToken, lastPrice, trailingStopLossInPercent, maxOfStopLossPrice)
+                kiteConnectRepository.updateLastPriceAndStopLoss(
+                    instrumentToken,
+                    lastPrice,
+                    newPnl,
+                    trailingStopLossInPercent,
+                    maxOfStopLossPrice,
+                    null,
+                    updatedAt
+                )
             }
         } else {
-            if(lastPrice >= oldStopLossPrice) {
-                SmartTradeNotificationManager.buildNotification(oldStopLossPrice.toString(), position.tradingSymbol)
+            if (lastPrice >= oldStopLossPrice) {
+                SmartTradeNotificationManager.buildStopLossPriceNotification(
+                    oldStopLossPrice.toString(),
+                    position.tradingSymbol
+                )
+                kiteConnectRepository.updateLastPriceAndStopLoss(
+                    instrumentToken,
+                    lastPrice,
+                    newPnl,
+                    trailingStopLossInPercent,
+                    oldStopLossPrice,
+                    null,
+                    updatedAt
+                )
             } else {
                 val newStopLossPrice = lastPrice * (1 + trailingStopLossInPercent / 100)
                 val minOfStopLossPrice = minOf(oldStopLossPrice, newStopLossPrice)
-                kiteConnectRepository.updatePosition(instrumentToken, lastPrice, trailingStopLossInPercent, minOfStopLossPrice)
+                kiteConnectRepository.updateLastPriceAndStopLoss(
+                    instrumentToken,
+                    lastPrice,
+                    newPnl,
+                    trailingStopLossInPercent,
+                    minOfStopLossPrice,
+                    null,
+                    updatedAt
+                )
             }
         }
     }

@@ -25,6 +25,6 @@
     </fragment>
     <fragment
         android:id="@+id/portfolioDetailsFragment"
-        android:name="com.example.smarttrade.ui.groupdetails.GroupPositionDetailsFragment"
+        android:name="com.example.smarttrade.ui.groupdetails.GroupDetailsFragment"
         android:label="PortfolioDetailsFragment" />
 </navigation>

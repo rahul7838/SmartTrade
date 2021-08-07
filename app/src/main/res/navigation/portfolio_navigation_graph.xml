@@ -2,13 +2,17 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/portfolio_navigation_graph"
-    app:startDestination="@id/portfolioFragment3">
+    app:startDestination="@id/position">
     <fragment
-        android:id="@+id/portfolioFragment3"
+        android:id="@+id/position"
         android:name="com.example.smarttrade.ui.position.PositionFragment"
         android:label="PortfolioFragment" />
     <fragment
-        android:id="@+id/groupFragment"
+        android:id="@+id/group"
         android:name="com.example.smarttrade.ui.group.GroupFragment"
         android:label="GroupFragment" />
+    <fragment
+        android:id="@+id/groupPositionDetailsFragment"
+        android:name="com.example.smarttrade.ui.groupdetails.GroupDetailsFragment"
+        android:label="GroupPositionDetailsFragment" />
 </navigation>

@@ -31,43 +31,97 @@
                 android:id="@+id/stop_loss_in_number_radio_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Stop Loss Value" />
+                android:text="Stop Loss Price" />
+
+            <RadioButton
+                android:id="@+id/stop_loss_pnl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Stop Loss in PnL" />
         </RadioGroup>
 
-        <androidx.appcompat.widget.AppCompatButton
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="16dp"
+            android:hint="Enter Stop Loss"
+            app:layout_constraintBottom_toTopOf="@+id/submit_stop_loss"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/select_stop_loss_number_format"
+            app:layout_constraintVertical_bias="0.0"
+            app:layout_constraintVertical_chainStyle="packed">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/stopLoss"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:ems="10"
+                android:inputType="number|numberDecimal|numberSigned"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.478"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:layout_editor_absoluteY="161dp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/submit_stop_loss"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Submit"
+            android:layout_marginStart="79dp"
+            android:layout_marginTop="64dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="32dp"
+            android:text="Save"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/stopLossInPercent" />
+            app:layout_constraintStart_toEndOf="@+id/remove_stop_loss"
+            app:layout_constraintTop_toBottomOf="@+id/textInputLayout" />
 
-        <EditText
-            android:id="@+id/stopLossInPercent"
-            style="@style/Widget.AppCompat.EditText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:ems="3"
-            android:inputType="number|numberDecimal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/select_stop_loss_number_format" />
-
-        <androidx.appcompat.widget.AppCompatButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/remove_stop_loss"
-            android:layout_width="wrap_content"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="122dp"
-            android:layout_marginTop="44dp"
-            android:layout_marginEnd="202dp"
-            android:text="Remove Stop Loss"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
+            android:layout_marginStart="16dp"
+            android:text="Cancel"
+            app:layout_constraintBottom_toBottomOf="@+id/submit_stop_loss"
+            app:layout_constraintEnd_toStartOf="@+id/submit_stop_loss"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/submit_stop_loss" />
+            app:layout_constraintTop_toTopOf="@+id/submit_stop_loss" />
+
+<!--        <com.google.android.material.button.MaterialButtonToggleGroup-->
+<!--            android:id="@+id/toggleButtonAboveBelow"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:checkedButton="@id/above"-->
+<!--            app:singleSelection="true"-->
+<!--            app:layout_constraintBottom_toBottomOf="@+id/textInputLayout"-->
+<!--            app:layout_constraintEnd_toStartOf="@+id/textInputLayout"-->
+<!--            app:layout_constraintStart_toStartOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="@+id/textInputLayout">-->
+
+<!--            <com.google.android.material.button.MaterialButton-->
+<!--                android:id="@+id/above"-->
+<!--                style="?attr/materialButtonOutlinedStyle"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginStart="8dp"-->
+<!--                android:text="Above" />-->
+
+<!--            <com.google.android.material.button.MaterialButton-->
+<!--                android:id="@+id/below"-->
+<!--                style="?attr/materialButtonOutlinedStyle"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginStart="8dp"-->
+<!--                android:text="Below" />-->
+<!--        </com.google.android.material.button.MaterialButtonToggleGroup>-->
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

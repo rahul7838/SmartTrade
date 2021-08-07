@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
 import androidx.recyclerview.widget.RecyclerView
@@ -11,11 +13,18 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.smarttrade.BR
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.FragmentPositionBinding
+import com.example.smarttrade.extension.getTimeAgo
+import com.example.smarttrade.extension.getTimeAgo2
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.services.PositionUpdateService
 import com.example.smarttrade.ui.base.BaseFragment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.bind
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.core.component.KoinApiExtension
+import java.time.Instant
 
 @KoinApiExtension
 class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel>(), SwipeRefreshLayout.OnRefreshListener {
@@ -54,6 +63,9 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
                 PositionBottomSheetFragment::class.java.simpleName
             )
         }
+        adapter.onGroupClickListener = {
+            positionViewModel.updateGroup(it)
+        }
     }
 
     private fun initObserver() {
@@ -65,6 +77,13 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
                 adapter.updateList(it)
             }
         })
+        lifecycle.coroutineScope.launch {
+            while(true) {
+                delay(10000)
+                val time = positionViewModel.getTime().run { getTimeAgo2(this) }
+                parentActivity.activityBaseBinding?.toolbar?.timer?.text = "$time"
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -88,7 +107,6 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
                 logI("stop position update")
                 val intent = Intent(requireContext(), PositionUpdateService::class.java)
                 requireContext().stopService(intent)
-//                SmartTradeAlarmManager.stopUpdatingPosition()
             }
         }
         return true

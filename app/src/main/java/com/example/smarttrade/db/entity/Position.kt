@@ -1,8 +1,10 @@
 package com.example.smarttrade.db.entity
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.gson.annotations.SerializedName
+import androidx.room.Relation
+import java.time.Instant
 
 @Entity(tableName = "Position")
 data class Position(
@@ -43,7 +45,7 @@ data class Position(
 
     var closePrice: Double? = null,
 
-    var pnl: Double? = null,
+    var pnl: Double,
 
     var overnightQuantity: Int = 0,
 
@@ -65,9 +67,28 @@ data class Position(
 
     var value: Double? = 0.0,
 
-    var averagePrice: Double? = 0.0,
-    // local properties
-    var stopLossInPercent: Double? = null,
+    var averagePrice: Double = 0.0,
 
-    var stopLossPrice: Double? = null
+    var updatedAt: Long = Instant.now().toEpochMilli()
+
+//    @Embedded(prefix = "stopLoss")
+//    var stopLoss: StopLoss
+//    // local properties
+//    var stopLossInPercent: Double? = null,
+//
+//    var stopLossPrice: Double? = null,
+//
+//    var isStopLossNotificationActive: Boolean = true,
+//
+//
+)
+
+data class PositionWithStopLoss(
+    @Embedded
+    val position: Position,
+    @Relation(
+        parentColumn = "instrumentToken",
+        entityColumn = "instrumentToken"
+    )
+    val stopLoss: StopLoss?
 )

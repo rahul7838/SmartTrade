@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!--    enable -->
+    <item android:state_enabled="true">
+        <inset>
+            <shape android:shape="rectangle">
+                <corners android:radius="5dp"/>
+                <solid android:color="@color/purple_500"/>
+            </shape>
+        </inset>
+    </item>
+
+<!--    disable-->
+    <item android:state_enabled="false">
+        <inset>
+            <shape android:shape="rectangle">
+                <corners android:radius="5dp"/>
+                <solid android:color="@color/purple_200" />
+            </shape>
+        </inset>
+    </item>
+</selector>

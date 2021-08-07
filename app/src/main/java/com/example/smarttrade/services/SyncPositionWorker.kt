@@ -32,7 +32,7 @@ class SyncPositionWorker(context: Context, params: WorkerParameters) :
         val instrument = kiteConnectRepository.getInstrument()
         val quotes = kiteConnectRepository.getQuote(instrument)
         quotes.forEach {
-            calculateTrigger(kiteConnectRepository, it.key, it.value.lastPrice)
+//            calculateTrigger(kiteConnectRepository, it.key, it.value.lastPrice)
         }
         return Result.success()
     }

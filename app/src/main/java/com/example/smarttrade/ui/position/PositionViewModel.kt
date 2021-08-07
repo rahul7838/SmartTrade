@@ -1,33 +1,39 @@
 package com.example.smarttrade.ui.position
 
+import androidx.annotation.StringDef
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
+import com.example.smarttrade.db.entity.PositionWithStopLoss
+import com.example.smarttrade.db.entity.StopLoss
 import com.example.smarttrade.extension.calculateTrigger
 import com.example.smarttrade.extension.isBuyCall
 import com.example.smarttrade.extension.logI
+import com.example.smarttrade.repository.GroupRepository
 import com.example.smarttrade.repository.KiteConnectRepository
-import com.example.smarttrade.repository.LocalPosition
+import com.example.smarttrade.repository.StopLossRepository
 import com.example.smarttrade.ui.base.BaseViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
+import com.example.smarttrade.ui.position.PositionViewModel.StopLossType.Companion.STOP_LOSS_PERCENT
+import com.example.smarttrade.ui.position.PositionViewModel.StopLossType.Companion.STOP_LOSS_PNL
+import com.example.smarttrade.ui.position.PositionViewModel.StopLossType.Companion.STOP_LOSS_PRICE
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinApiExtension
+import java.time.Instant
+import kotlin.math.abs
 
 @KoinApiExtension
 class PositionViewModel(
     private val kiteConnectRepository: KiteConnectRepository,
+    private val stopLossRepository: StopLossRepository,
+    private val groupRepository: GroupRepository,
     requestToken: String?
-) :
-    BaseViewModel() {
+) : BaseViewModel() {
 
     init {
         if (requestToken != null) {
             createSession(requestToken)
         }
     }
-
 
     private fun createSession(requestToken: String) {
         ioDispatcher.launch {
@@ -41,49 +47,99 @@ class PositionViewModel(
             val instrumentToken = kiteConnectRepository.getInstrument()
             val quotes = kiteConnectRepository.getQuote(instrumentToken)
             quotes.forEach {
-                calculateTrigger(kiteConnectRepository, it.key, it.value.lastPrice)
+                calculateTrigger(
+                    kiteConnectRepository,
+                    stopLossRepository,
+                    it.key,
+                    it.value.lastPrice
+                )
             }
         }
     }
 
-
-    fun getPosition(): LiveData<List<LocalPosition>> {
+    fun getPosition(): LiveData<List<PositionWithStopLoss>> {
         return kiteConnectRepository.getPosition().asLiveData()
+    }
+
+    suspend fun getTime(): Long {
+        return kiteConnectRepository.getTime()
     }
 
     fun updateStopLoss(
         instrumentToken: String,
         lastPrice: Double,
-        isInPercent: Boolean,
+        averagePrice: Double,
+        netQuantity: Int,
+        @StopLossType stopLossType: String,
         stopLoss: Double
     ) {
         ioDispatcher.launch {
-            val isBuyCall = kiteConnectRepository.getNetQuantity(instrumentToken).isBuyCall()
-            if(isBuyCall) {
-                if (isInPercent) {
-                    kiteConnectRepository.updateStopLossInPercent(instrumentToken, stopLoss)
-                    val findStopLossValue = lastPrice * (1 - stopLoss / 100)
-                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, findStopLossValue)
-                } else {
-                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, stopLoss)
-                    val findStopLossInPercent = 100 * (1 - stopLoss / lastPrice)
-                    kiteConnectRepository.updateStopLossInPercent(
-                        instrumentToken,
-                        findStopLossInPercent
-                    )
+            val isBuyCall = netQuantity.isBuyCall()
+            if (isBuyCall) {
+                when (stopLossType) {
+                    STOP_LOSS_PERCENT -> {
+                        val findStopLossValue = lastPrice * (1 - stopLoss / 100)
+                        stopLossRepository.updateAndInsertStopLoss(
+                            StopLoss(
+                                instrumentToken,
+                                stopLossInPercent = stopLoss,
+                                stopLossPrice = findStopLossValue
+                            )
+                        )
+                    }
+                    STOP_LOSS_PRICE -> {
+                        val findStopLossInPercent = 100 * (1 - stopLoss / lastPrice)
+                        stopLossRepository.updateAndInsertStopLoss(
+                            StopLoss(
+                                instrumentToken,
+                                findStopLossInPercent,
+                                stopLoss
+                            )
+                        )
+                    }
+                    STOP_LOSS_PNL -> {
+                        stopLossRepository.updateAndInsertStopLoss(
+                            StopLoss(
+                                instrumentToken,
+                                stopLoss,
+                                null,
+                                stopLoss
+                            )
+                        )
+                    }
                 }
             } else {
-                if (isInPercent) {
-                    kiteConnectRepository.updateStopLossInPercent(instrumentToken, stopLoss)
-                    val findStopLossValue = lastPrice * (1 + stopLoss / 100)
-                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, findStopLossValue)
-                } else {
-                    kiteConnectRepository.updateOldStopLossPrice(instrumentToken, stopLoss)
-                    val findStopLossInPercent = 100 * (1 + stopLoss / lastPrice)
-                    kiteConnectRepository.updateStopLossInPercent(
-                        instrumentToken,
-                        findStopLossInPercent
-                    )
+                when (stopLossType) {
+                    STOP_LOSS_PERCENT -> {
+                        val findStopLossValue = lastPrice * (1 + stopLoss / 100)
+                        stopLossRepository.updateAndInsertStopLoss(
+                            StopLoss(
+                                instrumentToken,
+                                stopLoss,
+                                findStopLossValue
+                            )
+                        )
+                    }
+                    STOP_LOSS_PRICE -> {
+                        val findStopLossInPercent = 100 * (1 + stopLoss / lastPrice)
+                        stopLossRepository.updateAndInsertStopLoss(
+                            StopLoss(
+                                instrumentToken,
+                                findStopLossInPercent,
+                                stopLoss
+                            )
+                        )
+                    }
+                    STOP_LOSS_PNL -> {
+                        stopLossRepository.updateAndInsertStopLoss(
+                            StopLoss(
+                                instrumentToken,
+                                stopLoss,
+                                null,
+                                stopLoss
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -91,8 +147,7 @@ class PositionViewModel(
 
     fun removeStopLoss(instrumentToken: String) {
         ioDispatcher.launch {
-            kiteConnectRepository.updateStopLossInPercent(instrumentToken, null)
-            kiteConnectRepository.updateOldStopLossPrice(instrumentToken, null)
+            stopLossRepository.updateAndInsertStopLoss(StopLoss(instrumentToken, null, null))
         }
     }
 
@@ -101,6 +156,20 @@ class PositionViewModel(
         logI("onClear")
     }
 
+    fun updateGroup(listOfPositionWithStopLoss: List<PositionWithStopLoss>) {
+        viewModelScope.launch {
+            groupRepository.updateGroup(listOfPositionWithStopLoss)
+        }
+    }
+
+    @StringDef(value = [STOP_LOSS_PERCENT, STOP_LOSS_PRICE, STOP_LOSS_PNL], open = false)
+    annotation class StopLossType {
+        companion object {
+            const val STOP_LOSS_PERCENT = "stopLossPercent"
+            const val STOP_LOSS_PRICE = "stopLossPrice"
+            const val STOP_LOSS_PNL = "stopLossPnl"
+        }
+    }
 //region
 //    fun createSession(requestToken: String) {
 //        val jobCreateSession = ioDispatcher.launch {

@@ -33,8 +33,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         setToolbar(this.resources.getString(R.string.app_name))
         if(PreferenceManager.getUserLoggedIn()) {
             val expiryTime = PreferenceManager.getAccessTokenExpiryTime()
-            val currentTime = Instant.now().epochSecond
-            if(expiryTime < currentTime) {
+            val expiryInstant = Instant.ofEpochMilli(expiryTime)
+            val currentTime = Instant.now()
+            if(currentTime.isAfter(expiryInstant)) {
                 //token is expired
                 PreferenceManager.setUserLoggedIn(false)
             } else {

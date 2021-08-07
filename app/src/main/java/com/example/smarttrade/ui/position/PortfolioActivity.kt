@@ -2,7 +2,10 @@ package com.example.smarttrade.ui.position
 
 import android.os.Bundle
 import android.view.MenuItem
+import androidx.navigation.Navigation
 import androidx.navigation.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.NavigationUI
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityPortfolioBinding
 import com.example.smarttrade.manager.PreferenceManager
@@ -16,8 +19,7 @@ import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 
 @KoinApiExtension
-class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>(),
-    BottomNavigationView.OnNavigationItemSelectedListener {
+class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>() {
 
     private var requestToken: String? = null
 
@@ -31,23 +33,27 @@ class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>(),
         requestToken = intent.getStringExtra(REQUEST_TOKEN)
             ?: if (PreferenceManager.getUserLoggedIn()) null else throw IllegalStateException("Request token can not be null") // must be before super.onCreate()
         super.onCreate(savedInstanceState)
-        viewBinding?.bottomNavigation?.setOnNavigationItemSelectedListener(this)
+//        viewBinding?.bottomNavigation?.setOnNavigationItemSelectedListener(this)
     }
 
+    override fun onStart() {
+        super.onStart()
+        val navController = Navigation.findNavController(this, R.id.portfolio_nav_host)
+        viewBinding?.bottomNavigation?.let { NavigationUI.setupWithNavController(it, navController) }
+    }
 
-
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-
-        when (item.itemId) {
-            R.id.position -> {
-                findNavController(R.id.portfolio_nav_host).navigate(R.id.portfolioFragment3)
-            }
-            R.id.group -> {
+//    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+//
+//        when (item.itemId) {
+//            R.id.position -> {
+//                findNavController(R.id.portfolio_nav_host).navigate(R.id.portfolioFragment3)
+//            }
+//            R.id.group -> {
 //                findNavController(R.id.portfolio_nav_host).navigate(R.id.groupFragment)
-            }
-        }
-        return true
-    }
+//            }
+//        }
+//        return true
+//    }
 
     protected fun finalize() {
         // finalization logic

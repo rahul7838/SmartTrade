@@ -1,6 +1,6 @@
 package com.example.smarttrade.ui.position
 
-import android.graphics.Color
+import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -11,9 +11,10 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.PortfolioRecyclerItemBinding
+import com.example.smarttrade.db.entity.PositionWithStopLoss
+import com.example.smarttrade.extension.appendCurrency
 import com.example.smarttrade.extension.invisible
 import com.example.smarttrade.extension.visible
-import com.example.smarttrade.repository.LocalPosition
 import com.zerodhatech.models.Position
 import timber.log.Timber
 import java.text.DecimalFormat
@@ -22,15 +23,18 @@ import java.text.DecimalFormat
 class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioViewHolder>() {
 
     var itemLongClickListener: ((position: Position) -> Unit)? = null
-    var itemClickListener: ((localPosition: LocalPosition) -> Unit)? = null
+    var itemClickListener: ((positionWithStopLoss: PositionWithStopLoss) -> Unit)? = null
+    var onGroupClickListener: ((listOfPositionWithStopLoss: List<PositionWithStopLoss>) -> Unit)? = null
 
     //    lateinit var appCompatDelegate: () -> AppCompatDelegate
-    val listOfSelectedItem: MutableList<LocalPosition> = mutableListOf()
-    private val listOfItem: MutableList<LocalPosition> = mutableListOf()
+    val listOfSelectedItem: MutableList<PositionWithStopLoss> = mutableListOf()
+    private val listOfItem: MutableList<PositionWithStopLoss> = mutableListOf()
     var isActionModeOn = false
+    var actionMode: ActionMode? = null
 
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            actionMode = mode
             isActionModeOn = true
             val inflater = mode?.menuInflater
             inflater?.inflate(R.menu.portfolio_menu_multi_select, menu)
@@ -45,10 +49,10 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             when (item?.itemId) {
                 R.id.combine -> {
-
+                    val list = arrayListOf<PositionWithStopLoss>().apply { addAll(listOfSelectedItem) }
+                    onGroupClickListener?.invoke(list)
                 }
             }
-
             mode?.finish()
             return true
         }
@@ -59,9 +63,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
             notifyDataSetChanged()
             Timber.d("onDestroyActionMode")
         }
-
     }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PortfolioViewHolder {
         Timber.d("onCreateViewHolder")
@@ -80,7 +82,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         return listOfItem.size
     }
 
-    fun updateList(newList: List<LocalPosition>) {
+    fun updateList(newList: List<PositionWithStopLoss>) {
         listOfItem.clear()
         listOfItem.addAll(newList)
         notifyDataSetChanged()
@@ -90,62 +92,77 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
     inner class PortfolioViewHolder(private val viewDataBinding: PortfolioRecyclerItemBinding) :
         RecyclerView.ViewHolder(viewDataBinding.root) {
 
-        val decimalFormat = DecimalFormat("##,##,###.##")
+        private val decimalFormat: DecimalFormat by lazy { DecimalFormat("###,###,###,###.##") }
+        private val resources: Resources by lazy { viewDataBinding.root.context.resources }
 
-        fun update(position: LocalPosition) {
+        fun update(positionWithStopLoss: PositionWithStopLoss) {
             viewDataBinding.run {
-                stockName.text = position.tradingSymbol
-                quantityValue.text = position.netQuantity.toString()
-                averageValue.text = position.averagePrice.toString()
-                investedValue.text = position.value.toString()
-                lastTradingPriceValue.text = position.lastPrice.toString()
-                if(position.stopLossPrice != null) {
-                    stpl.visible()
-                    stplValue.visible()
-                    stplValue.text = decimalFormat.format(position.stopLossPrice)
-                } else {
-                    stpl.invisible()
-                    stplValue.invisible()
+                stockName.text = positionWithStopLoss.position.tradingSymbol
+                quantityValue.text = positionWithStopLoss.position.netQuantity.toString()
+                averageValue.text = positionWithStopLoss.position.averagePrice.toString()
+                investedValue.text = positionWithStopLoss.position.value.toString()
+                lastTradingPriceValue.text = positionWithStopLoss.position.lastPrice.toString()
+                pnlValue.text = decimalFormat.format(positionWithStopLoss.position.pnl)
+                val stopLossInAmount = positionWithStopLoss.stopLoss?.stopLossInAmount
+                val stopLossPrice = positionWithStopLoss.stopLoss?.stopLossPrice
+                when {
+                    stopLossInAmount != null -> {
+                        stpl.visible()
+                        stplValue.visible()
+                        stplValue.text = decimalFormat.format(stopLossInAmount).appendCurrency()
+                    }
+                    stopLossPrice != null -> {
+                        stpl.visible()
+                        stplValue.visible()
+                        stplValue.text = decimalFormat.format(stopLossPrice)
+                    }
+                    else -> {
+                        stpl.invisible()
+                        stplValue.invisible()
+                    }
                 }
             }
 
-            if (listOfSelectedItem.contains(position)) {
-                viewDataBinding.root.setBackgroundColor(Color.GRAY)
+            if (listOfSelectedItem.contains(positionWithStopLoss)) {
+                viewDataBinding.mtrlCardId.setCardBackgroundColor(resources.getColor(R.color.light_grey, null))
             } else {
-                viewDataBinding.root.setBackgroundColor(Color.WHITE)
+                viewDataBinding.mtrlCardId.setCardBackgroundColor(resources.getColor(R.color.white, null))
             }
 
-            onLongClickListener(position)
-            onClickListener(position)
+            onLongClickListener(positionWithStopLoss)
+            onClickListener(positionWithStopLoss)
         }
 
-        private fun selectItem(item: LocalPosition) {
+        private fun selectItem(item: PositionWithStopLoss) {
             if (isActionModeOn) {
                 if (listOfSelectedItem.contains(item)) {
                     listOfSelectedItem.remove(item)
-                    viewDataBinding.root.setBackgroundColor(Color.WHITE)
+                    viewDataBinding.mtrlCardId.setCardBackgroundColor(resources.getColor(R.color.white, null))
+                    if(listOfSelectedItem.size == 0) {
+                        actionMode?.finish()
+                    }
                 } else {
                     listOfSelectedItem.add(item)
-                    viewDataBinding.root.setBackgroundColor(Color.GRAY)
+                    viewDataBinding.mtrlCardId.setCardBackgroundColor(resources.getColor(R.color.light_grey, null))
                 }
             }
         }
 
-        private fun onClickListener(position: LocalPosition) {
-            viewDataBinding.root.setOnClickListener {
+        private fun onClickListener(positionWithStopLoss: PositionWithStopLoss) {
+            viewDataBinding.mtrlCardId.setOnClickListener {
                 if (isActionModeOn) {
-                    selectItem(position)
+                    selectItem(positionWithStopLoss)
                 } else {
-                    itemClickListener?.invoke(position)
+                    itemClickListener?.invoke(positionWithStopLoss)
                 }
             }
         }
 
-        private fun onLongClickListener(position: LocalPosition) {
-            viewDataBinding.root.setOnLongClickListener {
+        private fun onLongClickListener(positionWithStopLoss: PositionWithStopLoss) {
+            viewDataBinding.mtrlCardId.setOnLongClickListener {
                 if (!isActionModeOn) {
                     (it.context as AppCompatActivity).startSupportActionMode(actionModeCallback)
-                    selectItem(position)
+                    selectItem(positionWithStopLoss)
                 }
                 true
             }

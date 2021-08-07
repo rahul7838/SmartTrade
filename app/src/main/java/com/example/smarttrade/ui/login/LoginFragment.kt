@@ -3,6 +3,7 @@ package com.example.smarttrade.ui.login
 import android.os.Bundle
 import android.view.View
 import androidx.core.net.toUri
+import androidx.navigation.fragment.findNavController
 import com.example.smarttrade.BR
 import com.example.smarttrade.KiteConnect
 import com.example.smarttrade.R
@@ -41,8 +42,8 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewDataBinding?.zerodhaSignInBtn?.setOnClickListener {
-            openLink(requireContext(), KiteConnect.getLoginUrl().toUri())
-//            findNavController().navigate(R.id.action_loginFragment_to_webViewFragment)
+//            openLink(requireContext(), KiteConnect.getLoginUrl().toUri())
+            findNavController().navigate(R.id.action_loginFragment_to_webViewFragment)
         }
     }
 }

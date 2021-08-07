@@ -61,7 +61,7 @@ abstract class BaseActivity<VB : ViewDataBinding> : AppCompatActivity() {
             isVisible -> {
                 setSupportActionBar(activityBaseBinding?.toolbar)
                 supportActionBar?.elevation = 2f
-                supportActionBar?.setTitle(toolbarTitle)
+                activityBaseBinding?.toolbar?.txtTitle?.text = toolbarTitle
 //                supportActionBar?.setDisplayHomeAsUpEnabled(true)
             }
             else -> {logI("isVisible:$isVisible")}

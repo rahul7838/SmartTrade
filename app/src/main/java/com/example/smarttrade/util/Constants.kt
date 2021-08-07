@@ -5,6 +5,9 @@ object Constants {
     // Position Update Service
     const val FOREGROUND_NOTIFICATION_DESC = "Help you trade smartly"
     const val NOTIFI_ID_1978 = 1978
+
+    //Group
+    const val GROUP_ID = "groupId"
 }
 
 const val REQUEST_TOKEN = "requestToken"

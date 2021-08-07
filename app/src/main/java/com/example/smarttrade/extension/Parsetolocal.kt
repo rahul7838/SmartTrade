@@ -34,9 +34,7 @@ fun com.zerodhatech.models.Position.parseLocal(stopLossInPercent: Double? = null
         dayBuyValue,
         daySellValue,
         value,
-        averagePrice,
-        stopLossInPercent,
-        stopLossPrice
+        averagePrice
     )
 }
 

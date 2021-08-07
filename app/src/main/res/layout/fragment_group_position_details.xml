@@ -6,7 +6,7 @@
     <data>
         <variable
             name="portfolioDetailsViewModel"
-            type="com.example.smarttrade.ui.groupdetails.GroupPositionDetailsViewModel" />
+            type="com.example.smarttrade.ui.groupdetails.GroupDetailsViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -14,12 +14,11 @@
         android:layout_height="match_parent">
 
 
-        <androidx.recyclerview.widget.RecyclerView
+        <include
+            android:id="@+id/recycler_view"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="match_parent"
+            layout="@layout/recycler_view"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

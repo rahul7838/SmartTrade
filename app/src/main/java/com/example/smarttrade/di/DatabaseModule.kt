@@ -18,4 +18,5 @@ val databaseModule = module {
     single { get<PositionDatabase>().getGroupDao() }
     single { get<PositionDatabase>().getPositionDao() }
     single { get<PositionDatabase>().getGroupPositionDao() }
+    single { get<PositionDatabase>().getStopLossDao() }
 }
