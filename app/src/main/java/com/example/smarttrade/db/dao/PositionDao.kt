@@ -1,8 +1,8 @@
 package com.example.smarttrade.db.dao
 
 import androidx.room.*
+import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.db.entity.Position
-import com.example.smarttrade.db.entity.PositionWithStopLoss
 import com.example.smarttrade.extension.parseLocal
 import com.example.smarttrade.repository.LocalPosition
 import kotlinx.coroutines.flow.Flow
@@ -18,9 +18,9 @@ interface PositionDao : BaseDao<Position> {
 
     @Transaction
     @Query("select * from Position")
-    fun getPosition1(): Flow<List<PositionWithStopLoss>>
+    fun getPosition1(): Flow<List<BottomSheetDataObject.PositionWithStopLoss>>
 
-    fun getPosition(): Flow<List<PositionWithStopLoss>> {
+    fun getPosition(): Flow<List<BottomSheetDataObject.PositionWithStopLoss>> {
         return getPosition1()
 //        return getPosition1().distinctUntilChanged()
     }

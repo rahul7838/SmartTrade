@@ -6,7 +6,7 @@
     <data>
         <variable
             name="viewModel"
-            type="com.example.smarttrade.ui.position.PositionViewModel" />
+            type="com.example.smarttrade.ui.bottomsheet.BottomSheetViewModel" />
 
     </data>
 
@@ -45,11 +45,11 @@
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="16dp"
             android:hint="Enter Stop Loss"
             app:layout_constraintBottom_toTopOf="@+id/submit_stop_loss"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/select_stop_loss_number_format"
             app:layout_constraintVertical_bias="0.0"
@@ -94,33 +94,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/submit_stop_loss" />
 
-<!--        <com.google.android.material.button.MaterialButtonToggleGroup-->
-<!--            android:id="@+id/toggleButtonAboveBelow"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            app:checkedButton="@id/above"-->
-<!--            app:singleSelection="true"-->
-<!--            app:layout_constraintBottom_toBottomOf="@+id/textInputLayout"-->
-<!--            app:layout_constraintEnd_toStartOf="@+id/textInputLayout"-->
-<!--            app:layout_constraintStart_toStartOf="parent"-->
-<!--            app:layout_constraintTop_toTopOf="@+id/textInputLayout">-->
-
-<!--            <com.google.android.material.button.MaterialButton-->
-<!--                android:id="@+id/above"-->
-<!--                style="?attr/materialButtonOutlinedStyle"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginStart="8dp"-->
-<!--                android:text="Above" />-->
-
-<!--            <com.google.android.material.button.MaterialButton-->
-<!--                android:id="@+id/below"-->
-<!--                style="?attr/materialButtonOutlinedStyle"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginStart="8dp"-->
-<!--                android:text="Below" />-->
-<!--        </com.google.android.material.button.MaterialButtonToggleGroup>-->
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/groupDetails"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="See Details"
+            android:visibility="gone"
+            android:textColor="@color/purple_200"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/textInputLayout" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

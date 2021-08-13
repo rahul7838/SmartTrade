@@ -1,5 +1,6 @@
 package com.example.smarttrade.di
 
+import com.example.smarttrade.ui.bottomsheet.BottomSheetViewModel
 import com.example.smarttrade.ui.group.GroupViewModel
 import com.example.smarttrade.ui.login.LoginViewModel
 import com.example.smarttrade.ui.position.PositionViewModel
@@ -13,5 +14,6 @@ val viewModelModule = module {
     viewModel { params -> PositionViewModel(get(), get(),get(), params.getOrNull(String::class)) }
     viewModel { GroupDetailsViewModel(get()) }
     viewModel { GroupViewModel(get()) }
+    viewModel { BottomSheetViewModel(get(), get(), get()) }
 }
 

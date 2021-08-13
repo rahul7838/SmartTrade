@@ -4,9 +4,9 @@ import androidx.room.withTransaction
 import com.example.smarttrade.db.PositionDatabase
 import com.example.smarttrade.db.dao.GroupDao
 import com.example.smarttrade.db.dao.GroupPositionDao
+import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.db.entity.Group
 import com.example.smarttrade.db.entity.GroupPosition
-import com.example.smarttrade.db.entity.PositionWithStopLoss
 import kotlinx.coroutines.flow.Flow
 
 class GroupRepository(
@@ -15,7 +15,7 @@ class GroupRepository(
     private val database: PositionDatabase
 ) {
 
-    suspend fun updateGroup(listOfPositionWithStopLoss: List<PositionWithStopLoss>) {
+    suspend fun updateGroup(listOfPositionWithStopLoss: List<BottomSheetDataObject.PositionWithStopLoss>) {
         if (listOfPositionWithStopLoss.size >= 2) {
             val item1 = listOfPositionWithStopLoss[0]
             val item2 = listOfPositionWithStopLoss[1]
@@ -26,15 +26,28 @@ class GroupRepository(
                 totalPnl += it.position.pnl
             }
             database.withTransaction {
-                groupDao.insert(Group(groupName, totalPnl, null))
+                groupDao.insert(Group(groupName, totalPnl, null, null))
                 listOfPositionWithStopLoss.forEach {
-                    groupPositionDao.insert(GroupPosition(groupName, it.position.instrumentToken))
+                    groupPositionDao.insert(GroupPosition(it.position.instrumentToken, groupName))
                 }
             }
         }
     }
 
+    suspend fun updateStopLossAmount(groupName: String, trailingSL: Double?, stopLoss: Double?) {
+        groupDao.updateStopLossAmount(groupName, trailingSL, stopLoss)
+    }
+
+    suspend fun updatePnl(groupName: String, pnl: Double, trailingSL: Double?) {
+        groupDao.updatePnl(groupName, pnl, trailingSL)
+    }
+
     fun getListOfGroup(): Flow<List<Group>> {
         return groupDao.getListOfGroup()
     }
+
+    suspend fun getStopLoss(groupName: String): Double? {
+        return groupDao.getStopLoss(groupName)
+    }
+
 }

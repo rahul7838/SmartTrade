@@ -83,12 +83,4 @@ data class Position(
 //
 )
 
-data class PositionWithStopLoss(
-    @Embedded
-    val position: Position,
-    @Relation(
-        parentColumn = "instrumentToken",
-        entityColumn = "instrumentToken"
-    )
-    val stopLoss: StopLoss?
-)
+

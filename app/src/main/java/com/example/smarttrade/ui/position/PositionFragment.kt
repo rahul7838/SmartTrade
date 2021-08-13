@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.coroutineScope
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
 import androidx.recyclerview.widget.RecyclerView
@@ -13,18 +12,15 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.smarttrade.BR
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.FragmentPositionBinding
-import com.example.smarttrade.extension.getTimeAgo
 import com.example.smarttrade.extension.getTimeAgo2
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.services.PositionUpdateService
 import com.example.smarttrade.ui.base.BaseFragment
-import kotlinx.coroutines.CoroutineScope
+import com.example.smarttrade.ui.bottomsheet.BottomSheetFragment
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.bind
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.core.component.KoinApiExtension
-import java.time.Instant
 
 @KoinApiExtension
 class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel>(), SwipeRefreshLayout.OnRefreshListener {
@@ -58,9 +54,9 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
             adapter = this@PositionFragment.adapter
         }
         adapter.itemClickListener = {
-            PositionBottomSheetFragment.getInstance(it).show(
+            BottomSheetFragment.getInstance(it).show(
                 requireActivity().supportFragmentManager,
-                PositionBottomSheetFragment::class.java.simpleName
+                BottomSheetFragment::class.java.simpleName
             )
         }
         adapter.onGroupClickListener = {

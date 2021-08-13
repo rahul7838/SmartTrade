@@ -8,7 +8,7 @@ import com.example.smarttrade.R
 import com.example.smarttrade.databinding.PortfolioRecyclerItemBinding
 import com.example.smarttrade.db.entity.Group
 import com.example.smarttrade.extension.gone
-import com.example.smarttrade.extension.invisible
+import com.example.smarttrade.extension.visible
 
 class GroupListAdapter : RecyclerView.Adapter<GroupListAdapter.GroupViewHolder>() {
 
@@ -41,10 +41,13 @@ class GroupListAdapter : RecyclerView.Adapter<GroupListAdapter.GroupViewHolder>(
             binding.recyclerItemVisibilityGrp.gone()
             binding.stockName.text = group.groupName
             binding.pnlValue.text = group.totalPnl.toString()
-            if(group.stopLossAmount != null) {
-                binding.stplValue.text = group.stopLossAmount.toString()
+            if(group.trailingSL != null) {
+                binding.stpl.visible()
+                binding.stplValue.visible()
+                binding.stplValue.text = group.trailingSL.toString()
             } else {
-//                binding.stpl.gone()
+                binding.stplValue.gone()
+                binding.stpl.gone()
             }
             onClickListener(group)
         }

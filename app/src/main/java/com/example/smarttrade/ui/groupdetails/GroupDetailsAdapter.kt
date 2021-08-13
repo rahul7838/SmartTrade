@@ -6,10 +6,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.PortfolioRecyclerItemBinding
-import com.example.smarttrade.db.entity.GroupDetails
+import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.db.entity.Position
-import com.example.smarttrade.extension.invisible
-import com.example.smarttrade.extension.visible
 import timber.log.Timber
 
 class GroupDetailsAdapter : RecyclerView.Adapter<GroupDetailsAdapter.GroupDetailsViewHolder>() {
@@ -33,7 +31,7 @@ class GroupDetailsAdapter : RecyclerView.Adapter<GroupDetailsAdapter.GroupDetail
         return list.size
     }
 
-    fun updateList(newList: GroupDetails) {
+    fun updateList(newList: BottomSheetDataObject.GroupDetails) {
         list.clear()
         list.addAll(newList.listOfPosition)
         notifyDataSetChanged()

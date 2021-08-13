@@ -11,7 +11,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.PortfolioRecyclerItemBinding
-import com.example.smarttrade.db.entity.PositionWithStopLoss
+import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.extension.appendCurrency
 import com.example.smarttrade.extension.invisible
 import com.example.smarttrade.extension.visible
@@ -23,12 +23,12 @@ import java.text.DecimalFormat
 class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioViewHolder>() {
 
     var itemLongClickListener: ((position: Position) -> Unit)? = null
-    var itemClickListener: ((positionWithStopLoss: PositionWithStopLoss) -> Unit)? = null
-    var onGroupClickListener: ((listOfPositionWithStopLoss: List<PositionWithStopLoss>) -> Unit)? = null
+    var itemClickListener: ((positionWithStopLoss: BottomSheetDataObject.PositionWithStopLoss) -> Unit)? = null
+    var onGroupClickListener: ((listOfPositionWithStopLoss: List<BottomSheetDataObject.PositionWithStopLoss>) -> Unit)? = null
 
     //    lateinit var appCompatDelegate: () -> AppCompatDelegate
-    val listOfSelectedItem: MutableList<PositionWithStopLoss> = mutableListOf()
-    private val listOfItem: MutableList<PositionWithStopLoss> = mutableListOf()
+    val listOfSelectedItem: MutableList<BottomSheetDataObject.PositionWithStopLoss> = mutableListOf()
+    private val listOfItem: MutableList<BottomSheetDataObject.PositionWithStopLoss> = mutableListOf()
     var isActionModeOn = false
     var actionMode: ActionMode? = null
 
@@ -49,7 +49,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             when (item?.itemId) {
                 R.id.combine -> {
-                    val list = arrayListOf<PositionWithStopLoss>().apply { addAll(listOfSelectedItem) }
+                    val list = arrayListOf<BottomSheetDataObject.PositionWithStopLoss>().apply { addAll(listOfSelectedItem) }
                     onGroupClickListener?.invoke(list)
                 }
             }
@@ -82,7 +82,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         return listOfItem.size
     }
 
-    fun updateList(newList: List<PositionWithStopLoss>) {
+    fun updateList(newList: List<BottomSheetDataObject.PositionWithStopLoss>) {
         listOfItem.clear()
         listOfItem.addAll(newList)
         notifyDataSetChanged()
@@ -95,7 +95,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
         private val decimalFormat: DecimalFormat by lazy { DecimalFormat("###,###,###,###.##") }
         private val resources: Resources by lazy { viewDataBinding.root.context.resources }
 
-        fun update(positionWithStopLoss: PositionWithStopLoss) {
+        fun update(positionWithStopLoss: BottomSheetDataObject.PositionWithStopLoss) {
             viewDataBinding.run {
                 stockName.text = positionWithStopLoss.position.tradingSymbol
                 quantityValue.text = positionWithStopLoss.position.netQuantity.toString()
@@ -133,7 +133,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
             onClickListener(positionWithStopLoss)
         }
 
-        private fun selectItem(item: PositionWithStopLoss) {
+        private fun selectItem(item: BottomSheetDataObject.PositionWithStopLoss) {
             if (isActionModeOn) {
                 if (listOfSelectedItem.contains(item)) {
                     listOfSelectedItem.remove(item)
@@ -148,7 +148,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
             }
         }
 
-        private fun onClickListener(positionWithStopLoss: PositionWithStopLoss) {
+        private fun onClickListener(positionWithStopLoss: BottomSheetDataObject.PositionWithStopLoss) {
             viewDataBinding.mtrlCardId.setOnClickListener {
                 if (isActionModeOn) {
                     selectItem(positionWithStopLoss)
@@ -158,7 +158,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
             }
         }
 
-        private fun onLongClickListener(positionWithStopLoss: PositionWithStopLoss) {
+        private fun onLongClickListener(positionWithStopLoss: BottomSheetDataObject.PositionWithStopLoss) {
             viewDataBinding.mtrlCardId.setOnLongClickListener {
                 if (!isActionModeOn) {
                     (it.context as AppCompatActivity).startSupportActionMode(actionModeCallback)

@@ -2,8 +2,7 @@ package com.example.smarttrade.repository
 
 import com.example.smarttrade.KiteConnect
 import com.example.smarttrade.db.dao.PositionDao
-import com.example.smarttrade.db.dao.StopLossDao
-import com.example.smarttrade.db.entity.PositionWithStopLoss
+import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.parseLocal
 import com.zerodhatech.models.Position
@@ -12,7 +11,7 @@ import org.koin.core.component.KoinApiExtension
 
 
 @KoinApiExtension
-class KiteConnectRepository(
+class PositionRepository(
     private val positionDao: PositionDao) {
 
     suspend fun createSession(requestToken: String) {
@@ -137,7 +136,7 @@ class KiteConnectRepository(
         return KiteConnect.getPosition()
     }
 
-    fun getPosition(): Flow<List<PositionWithStopLoss>> {
+    fun getPosition(): Flow<List<BottomSheetDataObject.PositionWithStopLoss>> {
         return positionDao.getPosition()
     }
 
