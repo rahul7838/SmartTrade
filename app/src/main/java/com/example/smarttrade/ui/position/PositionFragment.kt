@@ -38,6 +38,7 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        logI("onViewCreated")
         viewDataBinding?.swipeToRefresh?.setOnRefreshListener(this)
         setLoader(true)
         initRecycler()
@@ -77,7 +78,7 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
         lifecycle.coroutineScope.launch {
             logI("delay-1")
             while (true) {
-                positionViewModel.getTime().run {
+                positionViewModel.getTime()?.run {
                     val a = getTimeAgo2(this)
                     parentActivity.activityBaseBinding?.toolbar?.timer?.text = a
                     logI("delay0")

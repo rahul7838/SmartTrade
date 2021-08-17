@@ -15,9 +15,7 @@ suspend fun calculateTrigger(
     stopLossRepository: StopLossRepository,
     instrumentToken: String,
     lastPrice: Double,
-    marketDepth: MarketDepth,
-    groupDetailsRepository: GroupDetailsRepository,
-    groupRepository: GroupRepository
+    marketDepth: MarketDepth
 ) {
 //    logI("calculate trigger")
     val position = positionRepository.getPosition(instrumentToken)
@@ -116,7 +114,6 @@ suspend fun calculateTrigger(
             }
         }
     }
-    triggerGroupStopLoss(groupDetailsRepository, groupRepository)
 }
 
 @KoinApiExtension

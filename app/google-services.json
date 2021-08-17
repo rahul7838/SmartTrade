@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "16754546114",
+    "project_id": "smarttrade-d74c9",
+    "storage_bucket": "smarttrade-d74c9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:16754546114:android:5df7f86569696fe391325b",
+        "android_client_info": {
+          "package_name": "com.example.smarttrade"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "16754546114-4o4degovd18q78stkloefbangriaf066.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2DdCL4Y86bZNDj1Nuynw_JKnqvVc3RHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "16754546114-4o4degovd18q78stkloefbangriaf066.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

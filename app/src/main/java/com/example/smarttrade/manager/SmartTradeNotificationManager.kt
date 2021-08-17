@@ -20,6 +20,8 @@ import kotlin.random.Random
 object SmartTradeNotificationManager : KoinComponent {
 
     private val context: Context by inject()
+    private val random: Random by lazy { Random(1000000000) }
+
 
     private val notificationManager: NotificationManager by lazy {
         context.getSystemService(
@@ -29,7 +31,6 @@ object SmartTradeNotificationManager : KoinComponent {
 
     fun buildStopLossPriceNotification(stopLossPrice: String, positionName: String) {
         val notification = getNotification("$positionName triggered at stop loss price $stopLossPrice")
-        val random = Random(1000)
         with(NotificationManagerCompat.from(context)) {
             notify(random.nextInt(), notification)
         }
@@ -37,7 +38,6 @@ object SmartTradeNotificationManager : KoinComponent {
 
     fun buildStopLossAmountNotification(stopLossAmount: String, positionName: String) {
         val notification = getNotification("$positionName triggered at stop loss Amount $stopLossAmount")
-        val random = Random(1000)
         with(NotificationManagerCompat.from(context)) {
             notify(random.nextInt(), notification)
         }

@@ -44,11 +44,13 @@ class PositionUpdateService : Service(), KoinComponent {
             val hr = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
             val min = Calendar.getInstance().get(Calendar.MINUTE)
             logI("Minutes $hr:hr$min:min")
+//            SmartTradeApplication.getInstance().firebaseAnalytics.logEvent("service_update_interval", bundleOf("service_update_interval" to "$hr:hr$min:min"))
             val instrument = positionRepository.getInstrument()
             val quotes = positionRepository.getQuote(instrument)
             quotes.forEach {
-                calculateTrigger(positionRepository, stopLossRepository, it.key, it.value.lastPrice, it.value.depth, groupDetailsRepository, groupRepository)
+                calculateTrigger(positionRepository, stopLossRepository, it.key, it.value.lastPrice, it.value.depth)
             }
+            triggerGroupStopLoss(groupDetailsRepository, groupRepository)
         }
     }
 

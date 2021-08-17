@@ -12,8 +12,12 @@ import org.koin.core.logger.Level
 import timber.log.Timber
 
 class SmartTradeApplication : Application() {
+//    lateinit var firebaseAnalytics: FirebaseAnalytics
+
     override fun onCreate() {
         super.onCreate()
+        // Obtain the FirebaseAnalytics instance.
+//        firebaseAnalytics = FirebaseAnalytics.getInstance(applicationContext)
 
         startKoin {
             if(BuildConfig.DEBUG) logger(AndroidLogger(Level.DEBUG))
@@ -29,5 +33,11 @@ class SmartTradeApplication : Application() {
             }
 
         })
+    }
+
+    companion object {
+        private var instance: SmartTradeApplication? = null
+
+        fun getInstance() = instance ?: SmartTradeApplication().also { instance = it }
     }
 }

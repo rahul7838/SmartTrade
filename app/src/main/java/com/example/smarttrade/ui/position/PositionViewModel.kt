@@ -45,20 +45,21 @@ class PositionViewModel(
 
     fun refreshPosition() {
         ioDispatcher.launch {
-            val instrumentToken = positionRepository.getInstrument()
             positionRepository.fetchAndInsertPosition()
+            val instrumentToken = positionRepository.getInstrument()
+            logI("Non suspend function")
             val quotes = positionRepository.getQuote(instrumentToken)
             quotes.forEach {
+                logI(it.toString())
                 calculateTrigger(
                     positionRepository,
                     stopLossRepository,
                     it.key,
                     it.value.lastPrice,
                     it.value.depth,
-                    groupDetailsRepository,
-                    groupRepository
                 )
             }
+            triggerGroupStopLoss(groupDetailsRepository, groupRepository)
         }
     }
 
@@ -66,7 +67,7 @@ class PositionViewModel(
         return positionRepository.getPosition().asLiveData()
     }
 
-    suspend fun getTime(): Long {
+    suspend fun getTime(): Long? {
         return positionRepository.getTime()
     }
 

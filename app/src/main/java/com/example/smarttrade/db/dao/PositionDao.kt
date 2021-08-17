@@ -141,5 +141,5 @@ interface PositionDao : BaseDao<Position> {
     suspend fun deletePositionByInstrumentToken(instrumentToken: String)
 
     @Query("Select updatedAt from position order by updatedAt DESC")
-    suspend fun getTime(): Long
+    suspend fun getTime(): Long?
 }

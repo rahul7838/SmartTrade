@@ -91,7 +91,7 @@ class PositionRepository(
         positionDao.deletePositionByInstrumentToken(instrumentToken)
     }
 
-    suspend fun getTime(): Long {
+    suspend fun getTime(): Long? {
         return positionDao.getTime()
     }
 
