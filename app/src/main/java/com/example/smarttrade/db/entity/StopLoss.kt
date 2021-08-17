@@ -1,6 +1,7 @@
 package com.example.smarttrade.db.entity
 
 import androidx.room.*
+import androidx.room.ForeignKey.CASCADE
 import androidx.room.ForeignKey.SET_NULL
 import java.time.Instant
 
@@ -10,7 +11,7 @@ data class StopLoss(
         entity = Position::class,
         parentColumns = ["instrumentToken"],
         childColumns = ["instrumentToken"],
-        onDelete = SET_NULL
+        onDelete = CASCADE
     )
     var instrumentToken: String,
     var stopLossInPercent: Double?,

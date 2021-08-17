@@ -1,8 +1,11 @@
 package com.example.smarttrade.extension
 
 import com.example.smarttrade.manager.SmartTradeNotificationManager
+import com.example.smarttrade.repository.GroupDetailsRepository
+import com.example.smarttrade.repository.GroupRepository
 import com.example.smarttrade.repository.PositionRepository
 import com.example.smarttrade.repository.StopLossRepository
+import com.zerodhatech.models.MarketDepth
 import org.koin.core.component.KoinApiExtension
 import java.time.Instant
 
@@ -11,7 +14,10 @@ suspend fun calculateTrigger(
     positionRepository: PositionRepository,
     stopLossRepository: StopLossRepository,
     instrumentToken: String,
-    lastPrice: Double
+    lastPrice: Double,
+    marketDepth: MarketDepth,
+    groupDetailsRepository: GroupDetailsRepository,
+    groupRepository: GroupRepository
 ) {
 //    logI("calculate trigger")
     val position = positionRepository.getPosition(instrumentToken)
@@ -23,7 +29,11 @@ suspend fun calculateTrigger(
 //    logI("Trailing stop loss: $trailingStopLossInPercent")
     val updatedAt = Instant.now().toEpochMilli()
     val stopLossAmount = stopLossRepository.getStopLossAmount(instrumentToken)
-    val newPnl = ((lastPrice - position.averagePrice) * position.netQuantity)
+//    val newPnl = ((lastPrice - position.averagePrice) * position.netQuantity)
+    val buyDepth = marketDepth.buy.first().price
+    val sellDepth = marketDepth.sell.first().price
+    val midPrice = (buyDepth + sellDepth)/2
+    val newPnl = (midPrice - position.averagePrice)* position.netQuantity
     if (trailingStopLossInPercent == null) {
         positionRepository.updatePosition(instrumentToken, lastPrice, updatedAt, newPnl)
     } else if (stopLossAmount != null) {
@@ -106,7 +116,39 @@ suspend fun calculateTrigger(
             }
         }
     }
+    triggerGroupStopLoss(groupDetailsRepository, groupRepository)
 }
+
+@KoinApiExtension
+suspend fun triggerGroupStopLoss(
+    groupDetailsRepository: GroupDetailsRepository,
+    groupRepository: GroupRepository
+) {
+    val groupDetails = groupDetailsRepository.getAllGroupPosition()
+    groupDetails.forEach {
+        var pnl = 0.0
+        it.listOfPosition.forEach { position ->
+            pnl += position.pnl
+        }
+        val trailingSL = it.group.trailingSL
+        val stopLoss = it.group.stopLoss
+        if (trailingSL != null && trailingSL >= pnl) {
+            SmartTradeNotificationManager.buildStopLossAmountNotification(
+                trailingSL.toString(),
+                it.group.groupName
+            )
+            groupRepository.updatePnl(it.group.groupName, pnl, trailingSL)
+        } else {
+            val newStopLoss = if (stopLoss != null) pnl - stopLoss else stopLoss
+            val maxOfStopLoss = if (newStopLoss != null && trailingSL != null) maxOf(
+                newStopLoss,
+                trailingSL
+            ) else trailingSL
+            groupRepository.updatePnl(it.group.groupName, pnl, maxOfStopLoss)
+        }
+    }
+}
+
 
 fun Int.isBuyCall(): Boolean {
     return this > 0

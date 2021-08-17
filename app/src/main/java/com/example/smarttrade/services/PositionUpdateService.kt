@@ -6,6 +6,7 @@ import android.os.IBinder
 import com.example.smarttrade.extension.calculateTrigger
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.startCoroutineTimer
+import com.example.smarttrade.extension.triggerGroupStopLoss
 import com.example.smarttrade.manager.SmartTradeNotificationManager
 import com.example.smarttrade.repository.GroupDetailsRepository
 import com.example.smarttrade.repository.GroupRepository
@@ -46,27 +47,11 @@ class PositionUpdateService : Service(), KoinComponent {
             val instrument = positionRepository.getInstrument()
             val quotes = positionRepository.getQuote(instrument)
             quotes.forEach {
-                calculateTrigger(positionRepository, stopLossRepository, it.key, it.value.lastPrice)
-            }
-            val groupDetails = groupDetailsRepository.getAllGroupPosition()
-            groupDetails.forEach {
-                var pnl = 0.0
-                it.listOfPosition.forEach { position ->
-                    pnl += position.pnl
-                }
-                val trailingSL = it.group.trailingSL
-                val stopLoss = it.group.stopLoss
-                if(trailingSL!=null && trailingSL >= pnl) {
-                    SmartTradeNotificationManager.buildStopLossAmountNotification(trailingSL.toString(), it.group.groupName)
-                    groupRepository.updatePnl(it.group.groupName, pnl, trailingSL)
-                } else {
-                    val newStopLoss = if(stopLoss != null) pnl - stopLoss else stopLoss
-                    val maxOfStopLoss = if(newStopLoss!=null && trailingSL!=null) maxOf(newStopLoss, trailingSL) else trailingSL
-                    groupRepository.updatePnl(it.group.groupName, pnl, maxOfStopLoss)
-                }
+                calculateTrigger(positionRepository, stopLossRepository, it.key, it.value.lastPrice, it.value.depth, groupDetailsRepository, groupRepository)
             }
         }
     }
+
 
     override fun onBind(intent: Intent?): IBinder? = null
 }

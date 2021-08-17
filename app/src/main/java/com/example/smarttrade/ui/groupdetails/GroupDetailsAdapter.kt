@@ -8,7 +8,9 @@ import com.example.smarttrade.R
 import com.example.smarttrade.databinding.PortfolioRecyclerItemBinding
 import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.db.entity.Position
+import com.example.smarttrade.extension.gone
 import timber.log.Timber
+import java.text.DecimalFormat
 
 class GroupDetailsAdapter : RecyclerView.Adapter<GroupDetailsAdapter.GroupDetailsViewHolder>() {
 
@@ -39,6 +41,7 @@ class GroupDetailsAdapter : RecyclerView.Adapter<GroupDetailsAdapter.GroupDetail
 
     inner class GroupDetailsViewHolder(private val binding: PortfolioRecyclerItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        private val decimalFormat: DecimalFormat by lazy { DecimalFormat("###,###,###,###.##") }
 
         fun update(position: Position) {
             binding.run {
@@ -48,6 +51,8 @@ class GroupDetailsAdapter : RecyclerView.Adapter<GroupDetailsAdapter.GroupDetail
                     averageValue.text = position.averagePrice.toString()
                     investedValue.text = position.value.toString()
                     lastTradingPriceValue.text = position.lastPrice.toString()
+                    pnlValue.text = decimalFormat.format(position.pnl)
+                    stpl.gone()
                 }
             }
 

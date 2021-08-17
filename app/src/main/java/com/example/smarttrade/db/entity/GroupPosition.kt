@@ -11,14 +11,14 @@ data class GroupPosition(
         entity = Position::class,
         parentColumns = ["instrumentToken"],
         childColumns = ["instrumentToken"],
-        onDelete = ForeignKey.SET_DEFAULT
+        onDelete = ForeignKey.CASCADE
     )
     val instrumentToken: String,
     @ForeignKey(
         entity = Group::class,
         parentColumns = ["groupName"],
         childColumns = ["groupName"],
-        onDelete = ForeignKey.SET_DEFAULT
+        onDelete = ForeignKey.CASCADE
     )
     val groupName: String,
     @PrimaryKey(autoGenerate = true)

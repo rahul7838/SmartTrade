@@ -11,7 +11,7 @@ import org.koin.dsl.module
 val viewModelModule = module {
 
     viewModel { LoginViewModel() }
-    viewModel { params -> PositionViewModel(get(), get(),get(), params.getOrNull(String::class)) }
+    viewModel { params -> PositionViewModel(get(), get(),get(),get(), params.getOrNull(String::class)) }
     viewModel { GroupDetailsViewModel(get()) }
     viewModel { GroupViewModel(get()) }
     viewModel { BottomSheetViewModel(get(), get(), get()) }

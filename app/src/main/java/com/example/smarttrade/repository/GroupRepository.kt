@@ -50,4 +50,8 @@ class GroupRepository(
         return groupDao.getStopLoss(groupName)
     }
 
+    suspend fun deleteListOfGroup(listOfGroup: List<Group>) {
+        groupDao.delete(listOfGroup)
+    }
+
 }

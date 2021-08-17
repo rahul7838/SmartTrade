@@ -9,6 +9,8 @@ import com.example.smarttrade.db.entity.StopLoss
 import com.example.smarttrade.extension.calculateTrigger
 import com.example.smarttrade.extension.isBuyCall
 import com.example.smarttrade.extension.logI
+import com.example.smarttrade.extension.triggerGroupStopLoss
+import com.example.smarttrade.repository.GroupDetailsRepository
 import com.example.smarttrade.repository.GroupRepository
 import com.example.smarttrade.repository.PositionRepository
 import com.example.smarttrade.repository.StopLossRepository
@@ -24,6 +26,7 @@ class PositionViewModel(
     private val positionRepository: PositionRepository,
     private val stopLossRepository: StopLossRepository,
     private val groupRepository: GroupRepository,
+    private val groupDetailsRepository: GroupDetailsRepository,
     requestToken: String?
 ) : BaseViewModel() {
 
@@ -43,13 +46,17 @@ class PositionViewModel(
     fun refreshPosition() {
         ioDispatcher.launch {
             val instrumentToken = positionRepository.getInstrument()
+            positionRepository.fetchAndInsertPosition()
             val quotes = positionRepository.getQuote(instrumentToken)
             quotes.forEach {
                 calculateTrigger(
                     positionRepository,
                     stopLossRepository,
                     it.key,
-                    it.value.lastPrice
+                    it.value.lastPrice,
+                    it.value.depth,
+                    groupDetailsRepository,
+                    groupRepository
                 )
             }
         }

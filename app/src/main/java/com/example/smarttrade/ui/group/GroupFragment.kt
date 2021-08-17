@@ -44,7 +44,9 @@ class GroupFragment : BaseFragment<FragmentGroupPositionBinding, GroupViewModel>
                 requireActivity().supportFragmentManager,
                 BottomSheetFragment::class.java.simpleName
             )
-//
+        }
+        adapter.onDeleteClickListener = {
+            groupViewModel.deleteListOfGroup(it)
         }
     }
 

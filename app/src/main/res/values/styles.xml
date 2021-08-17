@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppToolbar.Title">
-        <item name="android:textColor">@color/white</item>
+    <style name="AppToolbar.Title" parent="Widget.MaterialComponents.ActionBar.Primary">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
         <item name="android:textSize">18sp</item>
         <item name="android:gravity">center_vertical</item>
     </style>
@@ -19,10 +19,15 @@
         <item name="android:textColor">@color/white</item>
     </style>
 
-    <style name="ButtonBorderless" parent="android:Widget.Material.Button.Borderless.Colored">
+    <style name="ButtonBorderless" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">?attr/colorOnPrimary</item>
 
 
     </style>
     <style name="ButtonBorderless1" parent="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+    <style name="BottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView">
+<!--        <item name="itemTextColor">@</item>-->
+    </style>
 
 </resources>

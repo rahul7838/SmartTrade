@@ -8,9 +8,7 @@ data class Group(
     val groupName: String,
     val totalPnl: Double,
     val trailingSL: Double?,
-    val stopLoss: Double?
-//    @PrimaryKey(autoGenerate = true)
-//    val id: Int = 0
+    val stopLoss: Double?,
 ): BottomSheetDataObject()
 
 

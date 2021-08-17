@@ -107,7 +107,7 @@ class BottomSheetFragment(private val bottomSheetDataObject: BottomSheetDataObje
                 }
                 is Group -> {
                     //initially trailing stop loss and stop loss is same
-                    viewModel.updateStopLoss(bottomSheetDataObject.groupName, bottomSheetDataObject.totalPnl-stopLoss, stopLoss)
+                    viewModel.updateStopLoss(bottomSheetDataObject.groupName, -stopLoss, stopLoss)
                 }
                 else -> {
 

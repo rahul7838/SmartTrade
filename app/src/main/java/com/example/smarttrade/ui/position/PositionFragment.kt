@@ -59,7 +59,7 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
                 BottomSheetFragment::class.java.simpleName
             )
         }
-        adapter.onGroupClickListener = {
+        adapter.onCombineClickListener = {
             positionViewModel.updateGroup(it)
         }
     }
@@ -73,13 +73,21 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
                 adapter.updateList(it)
             }
         })
+        logI("first")
         lifecycle.coroutineScope.launch {
-            while(true) {
+            logI("delay-1")
+            while (true) {
+                positionViewModel.getTime().run {
+                    val a = getTimeAgo2(this)
+                    parentActivity.activityBaseBinding?.toolbar?.timer?.text = a
+                    logI("delay0")
+                }
+                logI("delay1")
                 delay(10000)
-                val time = positionViewModel.getTime().run { getTimeAgo2(this) }
-                parentActivity.activityBaseBinding?.toolbar?.timer?.text = "$time"
+                logI("delay2")
             }
         }
+        logI("second")
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

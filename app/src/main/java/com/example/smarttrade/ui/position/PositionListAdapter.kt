@@ -24,7 +24,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
 
     var itemLongClickListener: ((position: Position) -> Unit)? = null
     var itemClickListener: ((positionWithStopLoss: BottomSheetDataObject.PositionWithStopLoss) -> Unit)? = null
-    var onGroupClickListener: ((listOfPositionWithStopLoss: List<BottomSheetDataObject.PositionWithStopLoss>) -> Unit)? = null
+    var onCombineClickListener: ((listOfPositionWithStopLoss: List<BottomSheetDataObject.PositionWithStopLoss>) -> Unit)? = null
 
     //    lateinit var appCompatDelegate: () -> AppCompatDelegate
     val listOfSelectedItem: MutableList<BottomSheetDataObject.PositionWithStopLoss> = mutableListOf()
@@ -50,7 +50,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
             when (item?.itemId) {
                 R.id.combine -> {
                     val list = arrayListOf<BottomSheetDataObject.PositionWithStopLoss>().apply { addAll(listOfSelectedItem) }
-                    onGroupClickListener?.invoke(list)
+                    onCombineClickListener?.invoke(list)
                 }
             }
             mode?.finish()
@@ -126,7 +126,7 @@ class PositionListAdapter : RecyclerView.Adapter<PositionListAdapter.PortfolioVi
             if (listOfSelectedItem.contains(positionWithStopLoss)) {
                 viewDataBinding.mtrlCardId.setCardBackgroundColor(resources.getColor(R.color.light_grey, null))
             } else {
-                viewDataBinding.mtrlCardId.setCardBackgroundColor(resources.getColor(R.color.white, null))
+                viewDataBinding.mtrlCardId.setCardBackgroundColor(resources.getColor(R.color.background, null))
             }
 
             onLongClickListener(positionWithStopLoss)

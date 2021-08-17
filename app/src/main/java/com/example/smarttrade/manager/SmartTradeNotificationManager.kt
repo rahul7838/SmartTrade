@@ -53,6 +53,7 @@ object SmartTradeNotificationManager : KoinComponent {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(context.resources.getString(R.string.app_name))
             .setContentText(descriptionText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(descriptionText))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)

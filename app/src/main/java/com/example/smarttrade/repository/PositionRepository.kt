@@ -6,6 +6,7 @@ import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.parseLocal
 import com.zerodhatech.models.Position
+import com.zerodhatech.models.Quote
 import kotlinx.coroutines.flow.Flow
 import org.koin.core.component.KoinApiExtension
 
@@ -27,28 +28,22 @@ class PositionRepository(
      */
     suspend fun fetchAndInsertPosition() {
         logI("fetch and insert positions")
-        val positions = KiteConnect.getPosition()
+        val positions = KiteConnect.getPosition()["net"]
         val oldInstrumentToken = positionDao.getInstrument()
         val newInstrumentToken = arrayListOf<String>()
-        if(oldInstrumentToken.isEmpty()) {
-            positions.values.forEach {
-                positionDao.insertPositions(it.parseLocal())
-            }
+        if (oldInstrumentToken.isEmpty()) {
+            positions?.parseLocal()?.let { positionDao.insertPositions(it) }
         } else {
-            positions.values.forEach { list ->
-                list.forEach {
-                    newInstrumentToken.add(it.instrumentToken)
-                }
+            positions?.forEach {
+                newInstrumentToken.add(it.instrumentToken)
             }
             oldInstrumentToken.forEach {
-                if(!newInstrumentToken.contains(it)) {
+                if (!newInstrumentToken.contains(it)) {
                     deletePositionByInstrumentToken(it)
                 }
             }
-            positions.values.forEach {
-                it.forEach { position ->
-                    positionDao.updateOrInsert(position)
-                }
+            positions?.forEach {
+                positionDao.updateOrInsert(it)
             }
         }
     }
@@ -100,8 +95,10 @@ class PositionRepository(
         return positionDao.getTime()
     }
 
-    fun getQuote(instrumentToken: Array<String>) =
-        KiteConnect.getQuote(instrumentToken)
+    fun getQuote(instrumentToken: Array<String>): Map<String, Quote> {
+        logI("fetch quotes")
+        return KiteConnect.getQuote(instrumentToken)
+    }
 
 
     suspend fun getInstrument(): Array<String> {

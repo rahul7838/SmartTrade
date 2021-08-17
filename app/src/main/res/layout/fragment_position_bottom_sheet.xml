@@ -84,11 +84,11 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/remove_stop_loss"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/ButtonBorderless"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:text="Cancel"
+            android:text="Remove stop loss"
             app:layout_constraintBottom_toBottomOf="@+id/submit_stop_loss"
             app:layout_constraintEnd_toStartOf="@+id/submit_stop_loss"
             app:layout_constraintStart_toStartOf="parent"
