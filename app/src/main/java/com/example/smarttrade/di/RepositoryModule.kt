@@ -1,9 +1,6 @@
 package com.example.smarttrade.di
 
-import com.example.smarttrade.repository.GroupDetailsRepository
-import com.example.smarttrade.repository.GroupRepository
-import com.example.smarttrade.repository.PositionRepository
-import com.example.smarttrade.repository.StopLossRepository
+import com.example.smarttrade.repository.*
 import org.koin.dsl.module
 
 val repositoryModule = module {
@@ -11,4 +8,5 @@ val repositoryModule = module {
     single { StopLossRepository(get()) }
     single { GroupRepository(get(), get(), get()) }
     single { GroupDetailsRepository(get()) }
+    single { UncleThetaRepository() }
 }

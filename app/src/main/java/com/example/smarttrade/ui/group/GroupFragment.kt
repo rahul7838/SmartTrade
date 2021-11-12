@@ -6,9 +6,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.smarttrade.BR
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.FragmentGroupPositionBinding
+import com.example.smarttrade.extension.logI
 import com.example.smarttrade.ui.base.BaseFragment
 import com.example.smarttrade.ui.bottomsheet.BottomSheetFragment
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinApiExtension
 
@@ -26,6 +26,7 @@ class GroupFragment : BaseFragment<FragmentGroupPositionBinding, GroupViewModel>
     private val adapter: GroupListAdapter by lazy { GroupListAdapter() }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        logI("onViewCreated")
         super.onViewCreated(view, savedInstanceState)
         setLoader(true)
         initRecycler()

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.smarttrade">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
 
     <application
         android:name=".SmartTradeApplication"
@@ -34,12 +36,17 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.position.PortfolioActivity"
-            android:launchMode="singleTask"/>
+        <activity
+            android:name=".ui.position.PortfolioActivity"
+            android:launchMode="singleTask" />
 
         <receiver android:name=".services.PositionBroadCastReceiver" />
 
-        <service android:name=".services.PositionUpdateService"/>
+        <service
+            android:foregroundServiceType="mediaPlayback"
+            android:enabled="true"
+            android:exported="false"
+            android:name=".services.PositionUpdateService" />
     </application>
 
 </manifest><!--smarttrade://com.kite.login-->

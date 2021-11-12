@@ -1,18 +1,15 @@
 package com.example.smarttrade.ui.position
 
 import android.os.Bundle
-import android.view.MenuItem
 import androidx.navigation.Navigation
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityPortfolioBinding
 import com.example.smarttrade.manager.PreferenceManager
 import com.example.smarttrade.ui.base.BaseActivity
 import com.example.smarttrade.ui.base.BaseViewModel
+import com.example.smarttrade.ui.homescreen.HomeViewModel
 import com.example.smarttrade.util.REQUEST_TOKEN
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinApiExtension
 import org.koin.core.parameter.parametersOf
@@ -23,9 +20,9 @@ class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>() {
 
     private var requestToken: String? = null
 
-    private val positionViewModel: PositionViewModel by viewModel { parametersOf(requestToken) }
+    private val homeViewModel: HomeViewModel by viewModel { parametersOf(requestToken) }
 
-    override fun getViewModel(): BaseViewModel = positionViewModel
+    override fun getViewModel(): BaseViewModel = homeViewModel
 
     override var layoutId: Int = R.layout.activity_portfolio
 
@@ -33,7 +30,6 @@ class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>() {
         requestToken = intent.getStringExtra(REQUEST_TOKEN)
             ?: if (PreferenceManager.getUserLoggedIn()) null else throw IllegalStateException("Request token can not be null") // must be before super.onCreate()
         super.onCreate(savedInstanceState)
-//        viewBinding?.bottomNavigation?.setOnNavigationItemSelectedListener(this)
     }
 
     override fun onStart() {

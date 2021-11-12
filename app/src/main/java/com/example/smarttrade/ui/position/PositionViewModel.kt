@@ -5,15 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.smarttrade.db.entity.BottomSheetDataObject
-import com.example.smarttrade.db.entity.StopLoss
 import com.example.smarttrade.extension.calculateTrigger
-import com.example.smarttrade.extension.isBuyCall
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.triggerGroupStopLoss
-import com.example.smarttrade.repository.GroupDetailsRepository
-import com.example.smarttrade.repository.GroupRepository
-import com.example.smarttrade.repository.PositionRepository
-import com.example.smarttrade.repository.StopLossRepository
+import com.example.smarttrade.repository.*
 import com.example.smarttrade.ui.base.BaseViewModel
 import com.example.smarttrade.ui.position.PositionViewModel.StopLossType.Companion.STOP_LOSS_PERCENT
 import com.example.smarttrade.ui.position.PositionViewModel.StopLossType.Companion.STOP_LOSS_PNL
@@ -27,6 +22,7 @@ class PositionViewModel(
     private val stopLossRepository: StopLossRepository,
     private val groupRepository: GroupRepository,
     private val groupDetailsRepository: GroupDetailsRepository,
+    private val uncleThetaRepository: UncleThetaRepository,
     requestToken: String?
 ) : BaseViewModel() {
 
@@ -70,7 +66,6 @@ class PositionViewModel(
     suspend fun getTime(): Long? {
         return positionRepository.getTime()
     }
-
 
     override fun onCleared() {
         super.onCleared()

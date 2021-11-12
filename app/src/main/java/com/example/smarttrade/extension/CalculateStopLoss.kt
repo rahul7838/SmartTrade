@@ -7,7 +7,12 @@ import com.example.smarttrade.repository.PositionRepository
 import com.example.smarttrade.repository.StopLossRepository
 import com.zerodhatech.models.MarketDepth
 import org.koin.core.component.KoinApiExtension
+import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalDate
+import java.util.*
+import kotlin.math.abs
+import kotlin.math.min
 
 @KoinApiExtension
 suspend fun calculateTrigger(
@@ -17,7 +22,6 @@ suspend fun calculateTrigger(
     lastPrice: Double,
     marketDepth: MarketDepth
 ) {
-//    logI("calculate trigger")
     val position = positionRepository.getPosition(instrumentToken)
     val isPositionBuyCall =
         position.netQuantity.isBuyCall()// if we have buy the share trailing stop loss will be x% less than last/current price
@@ -149,4 +153,59 @@ suspend fun triggerGroupStopLoss(
 
 fun Int.isBuyCall(): Boolean {
     return this > 0
+}
+
+fun closestMultipleOf50(lastPrice: Double?): Double? {
+    if (lastPrice == null) {
+        return null
+    }
+    val roundOfValue: Double
+    val lastTwoDigit = lastPrice.rem(50)
+    roundOfValue = if (lastTwoDigit > 25) {
+        lastPrice - lastTwoDigit + 50
+    } else {
+        lastPrice.minus(lastTwoDigit)
+    }
+    return roundOfValue
+}
+
+fun calculateSkew(pePrice: Double?, cePrice: Double?): Double? {
+    if (pePrice == null || cePrice == null) {
+        return null
+    }
+    return abs(pePrice - cePrice) / min(cePrice, pePrice)
+}
+
+fun findExpiryDate(): Date {
+    val calender = Calendar.getInstance()
+    val localDate = LocalDate.now()
+    val numberOfDaysToExpiry: Int = when (localDate.dayOfWeek) {
+        DayOfWeek.MONDAY -> {
+            3
+        }
+        DayOfWeek.TUESDAY -> {
+            2
+        }
+        DayOfWeek.WEDNESDAY -> {
+            1
+        }
+        DayOfWeek.THURSDAY -> {
+            0
+        }
+        DayOfWeek.FRIDAY -> {
+            6
+        }
+        DayOfWeek.SATURDAY -> {
+            5
+        }
+        DayOfWeek.SUNDAY -> {
+            4
+        }
+    }
+    calender.add(Calendar.DAY_OF_MONTH, numberOfDaysToExpiry)
+    return calender.time
+}
+
+fun Double?.removeDecimalPart(): String {
+    return this!!.toString().split(".")[0]
 }

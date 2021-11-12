@@ -2,7 +2,7 @@
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/portfolio_navigation_graph"
-    app:startDestination="@id/position">
+    app:startDestination="@id/homeFragment">
     <fragment
         android:id="@+id/position"
         android:name="com.example.smarttrade.ui.position.PositionFragment"
@@ -15,4 +15,8 @@
         android:id="@+id/groupPositionDetailsFragment"
         android:name="com.example.smarttrade.ui.groupdetails.GroupDetailsFragment"
         android:label="GroupPositionDetailsFragment" />
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.smarttrade.ui.homescreen.HomeFragment"
+        android:label="HomeFragment" />
 </navigation>

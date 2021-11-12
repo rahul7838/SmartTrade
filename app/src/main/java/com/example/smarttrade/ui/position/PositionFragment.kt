@@ -1,5 +1,6 @@
 package com.example.smarttrade.ui.position
 
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
@@ -66,6 +67,8 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
     }
 
     private fun initObserver() {
+//        positionViewModel.getNSEInstrument()
+//        positionViewModel.getNifty50()
         positionViewModel.getPosition().observe(viewLifecycleOwner, {
             viewDataBinding?.swipeToRefresh?.isRefreshing = false
             if (it.isNotEmpty()) {
@@ -76,19 +79,19 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
         })
         logI("first")
         lifecycle.coroutineScope.launch {
-            logI("delay-1")
+//            logI("delay-1")
             while (true) {
                 positionViewModel.getTime()?.run {
                     val a = getTimeAgo2(this)
                     parentActivity.activityBaseBinding?.toolbar?.timer?.text = a
-                    logI("delay0")
+//                    logI("delay0")
                 }
-                logI("delay1")
+//                logI("delay1")
                 delay(10000)
-                logI("delay2")
+//                logI("delay2")
             }
         }
-        logI("second")
+//        logI("second")
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -102,15 +105,26 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         super.onOptionsItemSelected(item)
+        val intent = Intent(requireContext(), PositionUpdateService::class.java)
         when(item.itemId) {
             R.id.update_position -> {
                 logI("start position update")
-                val intent = Intent(requireContext(), PositionUpdateService::class.java)
+//                for (intent in POWERMANAGER_INTENTS) {
+//                    if (requireContext().packageManager?.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
+//                        // show dialog to ask user action
+//                            startActivity(intent)
+//                            logI("test")
+//                        break
+//                    } else {
+//                        val i = Intent()
+//                        i.action = Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS
+//                        startActivity(i)
+//                    }
+//                }
                 ContextCompat.startForegroundService(requireContext(), intent)
             }
             R.id.stop_update -> {
                 logI("stop position update")
-                val intent = Intent(requireContext(), PositionUpdateService::class.java)
                 requireContext().stopService(intent)
             }
         }
@@ -136,4 +150,14 @@ class PositionFragment : BaseFragment<FragmentPositionBinding, PositionViewModel
         logI("refresh")
         positionViewModel.refreshPosition()
     }
+
+    private val POWERMANAGER_INTENTS = arrayOf(
+
+        Intent().setComponent(
+            ComponentName(
+                "com.samsung.android.lool",
+                "com.samsung.android.sm.ui.battery.BatteryActivity"
+            )
+        )
+    )
 }

@@ -10,6 +10,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.smarttrade.R
+import com.example.smarttrade.extension.logI
 import com.example.smarttrade.ui.position.PortfolioActivity
 import org.koin.core.component.KoinApiExtension
 import org.koin.core.component.KoinComponent
@@ -37,7 +38,16 @@ object SmartTradeNotificationManager : KoinComponent {
     }
 
     fun buildStopLossAmountNotification(stopLossAmount: String, positionName: String) {
-        val notification = getNotification("$positionName triggered at stop loss Amount $stopLossAmount")
+        val notification =
+            getNotification("$positionName triggered at stop loss Amount $stopLossAmount")
+        with(NotificationManagerCompat.from(context)) {
+            notify(random.nextInt(), notification)
+        }
+    }
+
+    fun buildTestNotification() {
+        logI("Test Notification")
+        val notification = getNotification("Test Notification")
         with(NotificationManagerCompat.from(context)) {
             notify(random.nextInt(), notification)
         }
@@ -54,7 +64,7 @@ object SmartTradeNotificationManager : KoinComponent {
             .setContentTitle(context.resources.getString(R.string.app_name))
             .setContentText(descriptionText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(descriptionText))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             // Set the intent that will fire when the user taps the notification
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
