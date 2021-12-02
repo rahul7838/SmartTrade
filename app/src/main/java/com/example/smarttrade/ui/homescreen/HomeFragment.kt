@@ -3,12 +3,17 @@ package com.example.smarttrade.ui.homescreen
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.smarttrade.BR
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.HomeScreenBinding
 import com.example.smarttrade.manager.SmartTradeNotificationManager
 import com.example.smarttrade.ui.base.BaseFragment
 import com.example.smarttrade.util.Resource
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
 class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
@@ -48,47 +53,43 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
     }
 
     private fun initObserver() {
-        homeViewModel.peResult.observe(viewLifecycleOwner, {
-            when (it) {
-                is Resource.Success -> {
-                    SmartTradeNotificationManager.buildTradeExecuteNotification(
-                        it.data!!.price, it.data.tradeName, it.data.isBuyOrSell
-                    )
-                }
-                is Resource.Error -> {
-                    SmartTradeNotificationManager.buildTradeFailureNotification(it.message)
-                }
-                is Resource.Loading -> Unit
-            }
-        })
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.singleShotEventBus
+                    .collect {
+                        when (it) {
+                            is Resource.Success -> {
+                                SmartTradeNotificationManager.buildTradeExecuteNotification(
+                                    it.data!!.price, it.data.tradeName, it.data.isBuyOrSell
+                                )
+                            }
+                            is Resource.Error -> {
+                                SmartTradeNotificationManager.buildTradeFailureNotification(it.message)
+                            }
+                            is Resource.Loading -> Unit
+                        }
+                    }
 
-        homeViewModel.ceResult.observe(viewLifecycleOwner, {
-            when (it) {
-                is Resource.Success -> {
-                    SmartTradeNotificationManager.buildTradeExecuteNotification(
-                        it.data!!.price, it.data.tradeName, it.data.isBuyOrSell
-                    )
-                }
-                is Resource.Error -> {
-                    SmartTradeNotificationManager.buildTradeFailureNotification(it.message)
-                }
-                is Resource.Loading -> Unit
             }
-        })
+        }
 
-        homeViewModel.overallResult.observe(viewLifecycleOwner, {
-            when (it) {
-                is Resource.Success -> {
-                    viewDataBinding?.progressBar?.isVisible = false
-                }
-                is Resource.Error -> {
-                    SmartTradeNotificationManager.buildTradeFailureNotification(it.message)
-                    viewDataBinding?.progressBar?.isVisible = false
-                }
-                is Resource.Loading -> {
-                    viewDataBinding?.progressBar?.isVisible = true
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                homeViewModel.overallResult.collect {
+                    when (it) {
+                        is Resource.Success -> {
+                            viewDataBinding?.progressBar?.isVisible = false
+                        }
+                        is Resource.Error -> {
+                            SmartTradeNotificationManager.buildTradeFailureNotification(it.message)
+                            viewDataBinding?.progressBar?.isVisible = false
+                        }
+                        is Resource.Loading -> {
+                            viewDataBinding?.progressBar?.isVisible = true
+                        }
+                    }
                 }
             }
-        })
+        }
     }
 }

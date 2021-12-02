@@ -7,9 +7,7 @@ import com.example.smarttrade.ui.AppBindingAdapter
 import com.example.smarttrade.ui.AppBindingComponent
 import com.onesignal.OneSignal
 import org.koin.android.ext.koin.androidContext
-import org.koin.android.logger.AndroidLogger
 import org.koin.core.context.startKoin
-import org.koin.core.logger.Level
 import timber.log.Timber
 
 class SmartTradeApplication : Application() {
@@ -29,7 +27,7 @@ class SmartTradeApplication : Application() {
         OneSignal.setAppId(ONESIGNAL_APP_ID);
 
         startKoin {
-            if (BuildConfig.DEBUG) logger(AndroidLogger(Level.DEBUG))
+//            if (BuildConfig.DEBUG) logger(AndroidLogger(Level.DEBUG)) need to update to latest version of koin
             androidContext(this@SmartTradeApplication)
             modules(modules = applicationModule)
         }

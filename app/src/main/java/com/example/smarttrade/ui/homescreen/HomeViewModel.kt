@@ -1,6 +1,5 @@
 package com.example.smarttrade.ui.homescreen
 
-import androidx.lifecycle.MutableLiveData
 import com.example.smarttrade.extension.*
 import com.example.smarttrade.manager.PreferenceManager
 import com.example.smarttrade.repository.UncleThetaRepository
@@ -13,6 +12,8 @@ import com.zerodhatech.models.OrderParams
 import com.zerodhatech.models.Quote
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.json.JSONException
 import org.koin.core.component.KoinApiExtension
@@ -42,11 +43,10 @@ class HomeViewModel(
     private var order2Price: Double? = null
     private var order1Price: Double? = null
 
-    val peResult = MutableLiveData<Resource<OrderSuccess>>()
-    val ceResult = MutableLiveData<Resource<OrderSuccess>>()
-    val overallResult = MutableLiveData<Resource<Boolean>>()
-    val _peSingleShotBusEvent = Channel<Resource<OrderSuccess>>(Channel.BUFFERED)
-    val peSingleShotBusEvent = _peSingleShotBusEvent.receiveAsFlow()
+    private val _overallResult = MutableStateFlow<Resource<Boolean>>(Resource.Success(true))
+    val overallResult = _overallResult.asStateFlow()
+    private val _peSingleShotBusEvent = Channel<Resource<OrderSuccess>>(Channel.BUFFERED)
+    val singleShotEventBus = _peSingleShotBusEvent.receiveAsFlow()
 
 
     // region
@@ -71,7 +71,7 @@ class HomeViewModel(
     /** last price of nifty 50 using [com.zerodhatech.models.Quote] API */
     fun getNifty50() {
         CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-            overallResult.postValue(Resource.Loading())
+            _overallResult.value = Resource.Loading()
             supervisorScope {
                 try {
                     val deferredExpiry = async {
@@ -91,11 +91,11 @@ class HomeViewModel(
                         expiryDate
                     )
                 } catch (ioException: IOException) {
-                    overallResult.postValue(Resource.Error(ioException.message))
+                    _overallResult.value = (Resource.Error(ioException.message))
                 } catch (jsonException: JSONException) {
-                    overallResult.postValue(Resource.Error(jsonException.message))
+                    _overallResult.value = (Resource.Error(jsonException.message))
                 } catch (kiteException: KiteException) {
-                    overallResult.postValue(Resource.Error((kiteException.message)))
+                    _overallResult.value = (Resource.Error((kiteException.message)))
                 }
             }
         }
@@ -136,11 +136,11 @@ class HomeViewModel(
                 ceNiftyInstrument
             )
         } catch (ioException: IOException) {
-            overallResult.postValue(Resource.Error(ioException.message))
+            _overallResult.value = (Resource.Error(ioException.message))
         } catch (jsonException: JSONException) {
-            overallResult.postValue(Resource.Error(jsonException.message))
+            _overallResult.value = (Resource.Error(jsonException.message))
         } catch (kiteException: KiteException) {
-            overallResult.postValue(Resource.Error((kiteException.message)))
+            _overallResult.value = (Resource.Error((kiteException.message)))
         }
     }
 
@@ -153,8 +153,8 @@ class HomeViewModel(
         val skew: Double
         try {
             skew = calculateSkew(peNiftyQuote?.lastPrice, ceNiftyQuote?.lastPrice)
-            if (skew > 0.3) {
-                overallResult.postValue(Resource.Error("Skew value is $skew which is > 0.3"))
+            if (skew > 16) {
+                _overallResult.value = (Resource.Error("Skew value is $skew which is > 0.3"))
             } else {
                 logI("Execute sell order")
                 supervisorScope {
@@ -164,12 +164,12 @@ class HomeViewModel(
                         launch { executeCeSellOrder(ceNiftyQuote, ceNiftyInstrument) }
                     executeCeOrder.join()
                     executePeOrder.join()
-                    overallResult.postValue(Resource.Success(true))
+                    _overallResult.value = (Resource.Success(true))
                 }
                 logI("Execute sell order 2")
             }
         } catch (argumentException: IllegalArgumentException) {
-            overallResult.postValue(Resource.Error(argumentException.message))
+            _overallResult.value = (Resource.Error(argumentException.message))
         }
     }
 
@@ -177,7 +177,7 @@ class HomeViewModel(
         try {
             order1Price = peNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
             val sellOrder = placeSellOrder(peNiftyInstrument, peNiftyQuote)
-            peResult.postValue(
+            _peSingleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         order1Price.toString(),
@@ -186,14 +186,13 @@ class HomeViewModel(
                     )
                 )
             )
-            delay(2000)
             val priceAndTriggerPrice: Pair<Double?, Double?> = calculateStopLossPrice(peNiftyQuote)
             val slOrder = placeStopLossOrder(
                 peNiftyInstrument,
                 priceAndTriggerPrice.first,
                 priceAndTriggerPrice.second
             )
-            peResult.postValue(
+            _peSingleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         priceAndTriggerPrice.second.toString(),
@@ -204,11 +203,11 @@ class HomeViewModel(
             )
             PreferenceManager.setPeSLOrderId(slOrder.orderId)
         } catch (ioException: IOException) {
-            peResult.postValue(Resource.Error(ioException.message))
+            _peSingleShotBusEvent.send(Resource.Error(ioException.message))
         } catch (jsonException: JSONException) {
-            peResult.postValue(Resource.Error(jsonException.message))
+            _peSingleShotBusEvent.send(Resource.Error(jsonException.message))
         } catch (kiteException: KiteException) {
-            peResult.postValue(Resource.Error((kiteException.message)))
+            _peSingleShotBusEvent.send(Resource.Error((kiteException.message)))
         }
     }
 
@@ -216,7 +215,7 @@ class HomeViewModel(
         try {
             order2Price = ceNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
             val sellOrder = placeSellOrder(ceNiftyInstrument, ceNiftyQuote)
-            ceResult.postValue(
+            _peSingleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         order2Price.toString(),
@@ -225,14 +224,13 @@ class HomeViewModel(
                     )
                 )
             )
-            delay(2000)
             val priceAndTriggerPrice: Pair<Double?, Double?> = calculateStopLossPrice(ceNiftyQuote)
             val slOrder = placeStopLossOrder(
                 ceNiftyInstrument,
                 priceAndTriggerPrice.first,
                 priceAndTriggerPrice.second
             )
-            ceResult.postValue(
+            _peSingleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         priceAndTriggerPrice.second.toString(),
@@ -243,11 +241,11 @@ class HomeViewModel(
             )
             PreferenceManager.setCeSLOrderId(slOrder.orderId)
         } catch (ioException: IOException) {
-            ceResult.postValue(Resource.Error(ioException.message))
+            _peSingleShotBusEvent.send(Resource.Error(ioException.message))
         } catch (jsonException: JSONException) {
-            ceResult.postValue(Resource.Error(jsonException.message))
+            _peSingleShotBusEvent.send(Resource.Error(jsonException.message))
         } catch (kiteException: KiteException) {
-            ceResult.postValue(Resource.Error((kiteException.message)))
+            _peSingleShotBusEvent.send(Resource.Error((kiteException.message)))
         }
     }
 
