@@ -10,6 +10,7 @@ import com.example.smarttrade.extension.logI
 import com.example.smarttrade.manager.PreferenceManager
 import com.example.smarttrade.services.SmartTradeAlarmManager
 import com.example.smarttrade.ui.login.MainActivity
+import com.example.smarttrade.util.Resource
 import com.zerodhatech.kiteconnect.KiteConnect
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException
 import com.zerodhatech.kiteconnect.kitehttp.exceptions.TokenException
@@ -23,9 +24,11 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 import java.io.IOException
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 @KoinApiExtension
-object KiteConnect : KoinComponent {
+object KiteConnectService : KoinComponent {
 
     private val context: Context by inject()
     private const val API_SECRET = "2z4p8vzajhsw81w4kltbatc3ce4ghkto"
@@ -43,8 +46,11 @@ object KiteConnect : KoinComponent {
         return kiteConnect.loginURL
     }
 
-    fun getQuote(instruments: Array<String>): Map<String, Quote> {
-        return fetch { kiteConnect.getQuote(instruments) }
+    @Throws(KiteException::class, IOException::class, JSONException::class)
+    suspend fun getQuote(instruments: Array<String>): Map<String, Quote> {
+        return suspendCoroutine<Map<String, Quote>> {
+            it.resume(fetch { kiteConnect.getQuote(instruments) })
+        }
     }
 
     @Throws(KiteException::class, IOException::class, JSONException::class)
@@ -98,8 +104,15 @@ object KiteConnect : KoinComponent {
         kiteConnect.accessToken = accessToken
     }
 
-    fun getInstruments(exchange: String): List<Instrument> {
-        return kiteConnect.instruments
+    suspend fun getInstruments(exchange: String): Resource<List<Instrument>> {
+        return suspendCoroutine {
+            try {
+                val listOfInstrument = kiteConnect.getInstruments(exchange)
+                it.resume(Resource.Success(listOfInstrument))
+            } catch (error: Throwable) {
+                it.resume(Resource.Error(error.message))
+            }
+        }
     }
 
     fun setPublicToken(publicToken: String) {

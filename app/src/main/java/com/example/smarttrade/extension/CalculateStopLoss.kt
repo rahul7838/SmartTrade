@@ -169,9 +169,12 @@ fun closestMultipleOf50(lastPrice: Double?): Double? {
     return roundOfValue
 }
 
-fun calculateSkew(pePrice: Double?, cePrice: Double?): Double? {
-    if (pePrice == null || cePrice == null) {
-        return null
+@Throws(IllegalArgumentException::class)
+fun calculateSkew(pePrice: Double?, cePrice: Double?): Double {
+    if (pePrice == null) {
+        throw IllegalArgumentException("pePrice can not be null")
+    } else if (cePrice == null) {
+        throw IllegalArgumentException("cePrice can not be null")
     }
     return abs(pePrice - cePrice) / min(cePrice, pePrice)
 }

@@ -1,6 +1,6 @@
 package com.example.smarttrade.repository
 
-import com.example.smarttrade.KiteConnect
+import com.example.smarttrade.KiteConnectService
 import com.example.smarttrade.db.dao.PositionDao
 import com.example.smarttrade.db.entity.BottomSheetDataObject
 import com.example.smarttrade.extension.logI
@@ -16,9 +16,9 @@ class PositionRepository(
     private val positionDao: PositionDao) {
 
     suspend fun createSession(requestToken: String) {
-        KiteConnect.createSession(requestToken)
+        KiteConnectService.createSession(requestToken)
         logI("session created")
-        KiteConnect.sessionExpiryHook()
+        KiteConnectService.sessionExpiryHook()
     }
 
     /**
@@ -28,7 +28,7 @@ class PositionRepository(
      */
     suspend fun fetchAndInsertPosition() {
         logI("fetch and insert positions")
-        val positions = KiteConnect.getPosition()["net"]
+        val positions = KiteConnectService.getPosition()["net"]
         val oldInstrumentToken = positionDao.getInstrument()
         val newInstrumentToken = arrayListOf<String>()
         if (oldInstrumentToken.isEmpty()) {
@@ -95,9 +95,9 @@ class PositionRepository(
         return positionDao.getTime()
     }
 
-    fun getQuote(instrumentToken: Array<String>): Map<String, Quote> {
+    suspend fun getQuote(instrumentToken: Array<String>): Map<String, Quote> {
         logI("fetch quotes")
-        return KiteConnect.getQuote(instrumentToken)
+        return KiteConnectService.getQuote(instrumentToken)
     }
 
 
@@ -130,7 +130,7 @@ class PositionRepository(
 
     suspend fun fetchPosition(): Map<String, List<Position>> {
         logI("fetch position")
-        return KiteConnect.getPosition()
+        return KiteConnectService.getPosition()
     }
 
     fun getPosition(): Flow<List<BottomSheetDataObject.PositionWithStopLoss>> {

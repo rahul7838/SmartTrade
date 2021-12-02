@@ -11,3 +11,5 @@ sealed class Resource<T>(
     class Loading<T>(data: T? = null) : Resource<T>(data)
     class Error<T>(message: String?, data: T? = null) : Resource<T>(data, message)
 }
+
+data class OrderSuccess(val price: String, val tradeName: String, val isBuyOrSell: String)

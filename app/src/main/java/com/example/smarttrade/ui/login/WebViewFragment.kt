@@ -3,7 +3,7 @@ package com.example.smarttrade.ui.login
 import android.os.Bundle
 import android.view.View
 import com.example.smarttrade.BR
-import com.example.smarttrade.KiteConnect
+import com.example.smarttrade.KiteConnectService
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.FragmentWebViewBinding
 import com.example.smarttrade.ui.base.BaseFragment
@@ -21,7 +21,7 @@ class WebViewFragment : BaseFragment<FragmentWebViewBinding, LoginViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val kiteConnect = KiteConnect.getLoginUrl()
+        val kiteConnect = KiteConnectService.getLoginUrl()
         viewDataBinding?.webViewLogin?.run {
             loadUrl(kiteConnect)
         }

@@ -46,3 +46,5 @@ const val VALIDITY_IOC = "IOC"
 const val VALIDITY_DAY = "DAY"
 const val TAG_TEST_UNCLE_THETA_WEDNESDAY = "TEST_UNCLE_THETA"
 const val VARIETY_REGULAR = "regular"
+
+const val TIME_OUT_IN_MILLIS = 1 * 60 * 1000 // 1 milli second

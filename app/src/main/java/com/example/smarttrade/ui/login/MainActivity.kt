@@ -3,13 +3,12 @@ package com.example.smarttrade.ui.login
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.os.bundleOf
-import com.example.smarttrade.KiteConnect
+import com.example.smarttrade.KiteConnectService
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityMainBinding
 import com.example.smarttrade.extension.logI
 import com.example.smarttrade.extension.startActivity
 import com.example.smarttrade.manager.PreferenceManager
-import com.example.smarttrade.services.SmartTradeAlarmManager
 import com.example.smarttrade.ui.base.BaseActivity
 import com.example.smarttrade.ui.base.BaseViewModel
 import com.example.smarttrade.ui.position.PortfolioActivity
@@ -40,7 +39,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 PreferenceManager.setUserLoggedIn(false)
             } else {
                 val accessToken = PreferenceManager.getAccessToken()
-                KiteConnect.setAccessToken(accessToken)
+                KiteConnectService.setAccessToken(accessToken)
                 startActivity<PortfolioActivity>()
                 finish()
             }

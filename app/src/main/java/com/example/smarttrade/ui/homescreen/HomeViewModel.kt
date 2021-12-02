@@ -6,19 +6,30 @@ import com.example.smarttrade.manager.PreferenceManager
 import com.example.smarttrade.repository.UncleThetaRepository
 import com.example.smarttrade.ui.base.BaseViewModel
 import com.example.smarttrade.util.*
+import com.zerodhatech.kiteconnect.kitehttp.exceptions.KiteException
 import com.zerodhatech.models.Instrument
 import com.zerodhatech.models.Order
 import com.zerodhatech.models.OrderParams
 import com.zerodhatech.models.Quote
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
+import org.json.JSONException
+import org.koin.core.component.KoinApiExtension
+import java.io.IOException
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.util.*
 
+@KoinApiExtension
 class HomeViewModel(
     private val uncleThetaRepository: UncleThetaRepository,
-    requestToken: String?
+    requestToken: String?,
+    private val io: CoroutineDispatcher = Dispatchers.IO
 ) : BaseViewModel() {
+
+    @Volatile
+    var inProgress = false
 
     init {
         if (requestToken != null) {
@@ -30,79 +41,293 @@ class HomeViewModel(
 
     private var order2Price: Double? = null
     private var order1Price: Double? = null
-    val peOrderId = MutableLiveData<Resource<Order>>()
-    val ceOrderId = MutableLiveData<Resource<Order>>()
 
+    val peResult = MutableLiveData<Resource<OrderSuccess>>()
+    val ceResult = MutableLiveData<Resource<OrderSuccess>>()
+    val overallResult = MutableLiveData<Resource<Boolean>>()
+    val _peSingleShotBusEvent = Channel<Resource<OrderSuccess>>(Channel.BUFFERED)
+    val peSingleShotBusEvent = _peSingleShotBusEvent.receiveAsFlow()
+
+
+    // region
     fun getNSEInstrument() {
         ioDispatcher.launch {
-            uncleThetaRepository.getInstruments(NSE_EXCHANGE)
+            try {
+                uncleThetaRepository.getInstruments(NSE_EXCHANGE)
+            } catch (error: Throwable) {
+
+            }
         }
     }
+
+    suspend fun getExpiryDate() = ioDispatcher.async {
+        findExpiryDate()
+    }
+
+    val exceptionHandler: CoroutineExceptionHandler =
+        CoroutineExceptionHandler { coroutineContext, throwable -> }
+//endregion
 
     /** last price of nifty 50 using [com.zerodhatech.models.Quote] API */
     fun getNifty50() {
-        ioDispatcher.launch {
-            val deferredExpiry = defaultDispatcher.async {
-                logI("")
-                findExpiryDate()
-            }
-            val deferredListOfNFOInstrument =
-                ioDispatcher.async { uncleThetaRepository.getInstruments(NFO_EXCHANGE) }
-            var peNiftyInstrument: Instrument
-            var ceNiftyInstrument: Instrument
-            var peNiftyQuote: Quote?
-            var ceNiftyQuote: Quote?
-            do {
-                val deferredNifty50LastPrice =
-                    ioDispatcher.async { uncleThetaRepository.getQuote(arrayOf(NIFTY_50_INSTRUMENT))[NIFTY_50_INSTRUMENT]?.lastPrice }
-                val expiry = deferredExpiry.await()
-                val nifty50LastPrice = deferredNifty50LastPrice.await()
-                val listOfNFOInstrument = deferredListOfNFOInstrument.await()
-                val strike = closestMultipleOf50(nifty50LastPrice).removeDecimalPart()
-                val filteredInstrumentBasedOnStrikeAndExpiry =
-                    listOfNFOInstrument.filter { instrument ->
-                        val expiryDate = instrument.expiry
-                        ((instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_PE) || (instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_CE)) && instrument.name == NAME_NIFTY
-                                && expiryDate.year == expiry.year && expiryDate.month == expiry.month && expiryDate.date == expiry.date
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            overallResult.postValue(Resource.Loading())
+            supervisorScope {
+                try {
+                    val deferredExpiry = async {
+                        logI("calculate expiry date")
+                        findExpiryDate()
                     }
-                peNiftyInstrument = filteredInstrumentBasedOnStrikeAndExpiry[0]
-                ceNiftyInstrument = filteredInstrumentBasedOnStrikeAndExpiry[1]
-
-                val niftyNFOListOfQuote = uncleThetaRepository.getQuote(
-                    arrayOf(
-                        peNiftyInstrument.instrument_token.toString(),
-                        ceNiftyInstrument.instrument_token.toString()
+                    val deferredListOfNFOInstrument =
+                        async { uncleThetaRepository.getInstruments(NFO_EXCHANGE) }
+                    val deferredNifty50LastPrice =
+                        async { uncleThetaRepository.getQuote(arrayOf(NIFTY_50_INSTRUMENT))[NIFTY_50_INSTRUMENT]?.lastPrice }
+                    val nifty50LastPrice: Double? = deferredNifty50LastPrice.await()
+                    val expiryDate: Date = deferredExpiry.await()
+                    val listOfNFOInstrument: List<Instrument> = deferredListOfNFOInstrument.await()
+                    processDate(
+                        nifty50LastPrice,
+                        listOfNFOInstrument,
+                        expiryDate
                     )
-                )
-                peNiftyQuote = niftyNFOListOfQuote[peNiftyInstrument.instrument_token.toString()]
-                ceNiftyQuote = niftyNFOListOfQuote[ceNiftyInstrument.instrument_token.toString()]
-                val skew = calculateSkew(peNiftyQuote?.lastPrice, ceNiftyQuote?.lastPrice) ?: -1.0
-            } while (skew == -1.0 || skew > 0.3)
-            val deferredOrderId1 = ioDispatcher.async {
-                order1Price = peNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
-                placeOrder(peNiftyInstrument, peNiftyQuote)
+                } catch (ioException: IOException) {
+                    overallResult.postValue(Resource.Error(ioException.message))
+                } catch (jsonException: JSONException) {
+                    overallResult.postValue(Resource.Error(jsonException.message))
+                } catch (kiteException: KiteException) {
+                    overallResult.postValue(Resource.Error((kiteException.message)))
+                }
             }
-            val deferredOrderId2 = ioDispatcher.async {
-                order2Price = ceNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
-                placeOrder(ceNiftyInstrument, ceNiftyQuote)
-            }
-            val orderId1 = deferredOrderId1.await()
-            val orderId2 = deferredOrderId2.await()
-            logI("orderId1 $orderId1")
-            logI("orderId2 $orderId2")
-            val deferredCeSLOrder = ioDispatcher.async {
-                placeStopLossOrder(ceNiftyInstrument, ceNiftyQuote)
-            }
-            val deferredPeSLOrder = ioDispatcher.async {
-                placeStopLossOrder(peNiftyInstrument, peNiftyQuote)
-            }
-            val peSLOrder = deferredPeSLOrder.await()
-            val ceSLOrder = deferredCeSLOrder.await()
-            PreferenceManager.setPeSLOrderId(peSLOrder?.orderId)
-            PreferenceManager.setCeSLOrderId(ceSLOrder?.orderId)
         }
     }
 
+    private suspend fun processDate(
+        nifty50LastPrice: Double?,
+        listOfNFOInstrument: List<Instrument>,
+        expiry: Date
+    ) {
+        val peNiftyInstrument: Instrument
+        val ceNiftyInstrument: Instrument
+        val peNiftyQuote: Quote?
+        val ceNiftyQuote: Quote?
+        val strike = closestMultipleOf50(nifty50LastPrice).removeDecimalPart()
+        val filteredInstrumentBasedOnStrikeAndExpiry =
+            listOfNFOInstrument.filter { instrument ->
+                val expiryDate = instrument.expiry
+                ((instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_PE) || (instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_CE)) && instrument.name == NAME_NIFTY
+                        && expiryDate.year == expiry.year && expiryDate.month == expiry.month && expiryDate.date == expiry.date
+            }
+        peNiftyInstrument = filteredInstrumentBasedOnStrikeAndExpiry[0]
+        ceNiftyInstrument = filteredInstrumentBasedOnStrikeAndExpiry[1]
+        val niftyNFOListOfQuote: Map<String, Quote>
+        try {
+            niftyNFOListOfQuote = uncleThetaRepository.getQuote(
+                arrayOf(
+                    peNiftyInstrument.instrument_token.toString(),
+                    ceNiftyInstrument.instrument_token.toString()
+                )
+            )
+            peNiftyQuote = niftyNFOListOfQuote[peNiftyInstrument.instrument_token.toString()]
+            ceNiftyQuote = niftyNFOListOfQuote[ceNiftyInstrument.instrument_token.toString()]
+            checkSkew(
+                peNiftyQuote,
+                peNiftyInstrument,
+                ceNiftyQuote,
+                ceNiftyInstrument
+            )
+        } catch (ioException: IOException) {
+            overallResult.postValue(Resource.Error(ioException.message))
+        } catch (jsonException: JSONException) {
+            overallResult.postValue(Resource.Error(jsonException.message))
+        } catch (kiteException: KiteException) {
+            overallResult.postValue(Resource.Error((kiteException.message)))
+        }
+    }
+
+    private suspend fun checkSkew(
+        peNiftyQuote: Quote?,
+        peNiftyInstrument: Instrument,
+        ceNiftyQuote: Quote?,
+        ceNiftyInstrument: Instrument
+    ) {
+        val skew: Double
+        try {
+            skew = calculateSkew(peNiftyQuote?.lastPrice, ceNiftyQuote?.lastPrice)
+            if (skew > 0.3) {
+                overallResult.postValue(Resource.Error("Skew value is $skew which is > 0.3"))
+            } else {
+                logI("Execute sell order")
+                supervisorScope {
+                    val executePeOrder =
+                        launch { executePeSellOrder(peNiftyQuote, peNiftyInstrument) }
+                    val executeCeOrder =
+                        launch { executeCeSellOrder(ceNiftyQuote, ceNiftyInstrument) }
+                    executeCeOrder.join()
+                    executePeOrder.join()
+                    overallResult.postValue(Resource.Success(true))
+                }
+                logI("Execute sell order 2")
+            }
+        } catch (argumentException: IllegalArgumentException) {
+            overallResult.postValue(Resource.Error(argumentException.message))
+        }
+    }
+
+    private suspend fun executePeSellOrder(peNiftyQuote: Quote?, peNiftyInstrument: Instrument) {
+        try {
+            order1Price = peNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
+            val sellOrder = placeSellOrder(peNiftyInstrument, peNiftyQuote)
+            peResult.postValue(
+                Resource.Success(
+                    OrderSuccess(
+                        order1Price.toString(),
+                        peNiftyInstrument.tradingsymbol,
+                        TRANSACTION_TYPE_SELL
+                    )
+                )
+            )
+            delay(2000)
+            val priceAndTriggerPrice: Pair<Double?, Double?> = calculateStopLossPrice(peNiftyQuote)
+            val slOrder = placeStopLossOrder(
+                peNiftyInstrument,
+                priceAndTriggerPrice.first,
+                priceAndTriggerPrice.second
+            )
+            peResult.postValue(
+                Resource.Success(
+                    OrderSuccess(
+                        priceAndTriggerPrice.second.toString(),
+                        peNiftyInstrument.tradingsymbol,
+                        TRANSACTION_TYPE_BUY
+                    )
+                )
+            )
+            PreferenceManager.setPeSLOrderId(slOrder.orderId)
+        } catch (ioException: IOException) {
+            peResult.postValue(Resource.Error(ioException.message))
+        } catch (jsonException: JSONException) {
+            peResult.postValue(Resource.Error(jsonException.message))
+        } catch (kiteException: KiteException) {
+            peResult.postValue(Resource.Error((kiteException.message)))
+        }
+    }
+
+    private suspend fun executeCeSellOrder(ceNiftyQuote: Quote?, ceNiftyInstrument: Instrument) {
+        try {
+            order2Price = ceNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
+            val sellOrder = placeSellOrder(ceNiftyInstrument, ceNiftyQuote)
+            ceResult.postValue(
+                Resource.Success(
+                    OrderSuccess(
+                        order2Price.toString(),
+                        ceNiftyInstrument.tradingsymbol,
+                        TRANSACTION_TYPE_SELL
+                    )
+                )
+            )
+            delay(2000)
+            val priceAndTriggerPrice: Pair<Double?, Double?> = calculateStopLossPrice(ceNiftyQuote)
+            val slOrder = placeStopLossOrder(
+                ceNiftyInstrument,
+                priceAndTriggerPrice.first,
+                priceAndTriggerPrice.second
+            )
+            ceResult.postValue(
+                Resource.Success(
+                    OrderSuccess(
+                        priceAndTriggerPrice.second.toString(),
+                        ceNiftyInstrument.tradingsymbol,
+                        TRANSACTION_TYPE_BUY
+                    )
+                )
+            )
+            PreferenceManager.setCeSLOrderId(slOrder.orderId)
+        } catch (ioException: IOException) {
+            ceResult.postValue(Resource.Error(ioException.message))
+        } catch (jsonException: JSONException) {
+            ceResult.postValue(Resource.Error(jsonException.message))
+        } catch (kiteException: KiteException) {
+            ceResult.postValue(Resource.Error((kiteException.message)))
+        }
+    }
+
+    @Throws(KiteException::class, IOException::class, JSONException::class)
+    private suspend fun placeSellOrder(instrument: Instrument, quote: Quote?): Order {
+        val orderParam = OrderParams().apply {
+            exchange = NFO_EXCHANGE
+            tradingsymbol = instrument.tradingsymbol
+            transactionType = TRANSACTION_TYPE_SELL
+            quantity = QUANTITY_LOT_SIZE
+            price = quote?.depth?.buy?.get(0)?.price?.minus(0.25)
+            product = PRODUCT_NRML
+            orderType = ORDER_TYPE_LIMIT
+            validity = VALIDITY_DAY
+            disclosedQuantity = 0
+            triggerPrice = 0.0
+            squareoff = 0.0
+            stoploss = 0.0
+            trailingStoploss = 0.0
+            tag = TAG_TEST_UNCLE_THETA_WEDNESDAY
+            parentOrderId = ""
+        }
+        return uncleThetaRepository.placeOrder(orderParam = orderParam, variety = VARIETY_REGULAR)
+//        return getMockOrder()
+    }
+
+    @Throws(KiteException::class, IOException::class, JSONException::class)
+    private suspend fun placeStopLossOrder(
+        instrument: Instrument,
+        price1: Double?,
+        triggerPrice1: Double?
+    ): Order {
+        val orderParam = OrderParams().apply {
+            exchange = NFO_EXCHANGE
+            tradingsymbol = instrument.tradingsymbol
+            transactionType = TRANSACTION_TYPE_BUY
+            quantity = QUANTITY_LOT_SIZE
+            price = price1
+            product = PRODUCT_NRML
+            orderType = ORDER_TYPE_SL
+            validity = VALIDITY_DAY
+            disclosedQuantity = 0
+            triggerPrice = triggerPrice1
+            squareoff = 0.0
+            stoploss = 0.0
+            trailingStoploss = 0.0
+            tag = TAG_TEST_UNCLE_THETA_WEDNESDAY
+            parentOrderId = ""
+        }
+        return uncleThetaRepository.placeOrder(
+            orderParam = orderParam,
+            variety = VARIETY_REGULAR
+        )
+//        return getMockOrder()
+    }
+
+    private fun calculateStopLossPrice(quote: Quote?): Pair<Double?, Double?> {
+        val price1: Double?
+        val triggerPrice1: Double?
+        when (LocalDate.now().dayOfWeek) {
+            DayOfWeek.WEDNESDAY -> {
+                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()?.plus(1)
+                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()
+            }
+            DayOfWeek.THURSDAY -> {
+                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.3)?.toInt()?.toDouble()?.plus(1)
+                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.3)?.toInt()?.toDouble()
+            }
+            else -> {
+                //                TODO Handle else scenario
+                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()?.plus(1)
+                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()
+            }
+        }
+        logI("Price:$price1, Trigger price $triggerPrice1")
+        return Pair(price1, triggerPrice1)
+//        return Pair(quote?.upperCircuitLimit, quote?.upperCircuitLimit)
+    }
+
+    //region square-off
     fun squareOffOrder() {
         val ceSLOrderId = PreferenceManager.getCeSLOrderId()
         ioDispatcher.launch {
@@ -124,7 +349,7 @@ class HomeViewModel(
         }
     }
 
-    private fun placeBuyOrder(instrument: Instrument) {
+    private suspend fun placeBuyOrder(instrument: Instrument) {
         val quote = uncleThetaRepository.getQuote(arrayOf(instrument.instrument_token.toString()))
         val orderParam = OrderParams().apply {
             exchange = NFO_EXCHANGE
@@ -148,80 +373,97 @@ class HomeViewModel(
             variety = VARIETY_REGULAR
         )
     }
-
-    private fun placeStopLossOrder(instrument: Instrument, quote: Quote?): Order? {
-        val price1: Double?
-        val triggerPrice1: Double?
-        when (LocalDate.now().dayOfWeek) {
-            DayOfWeek.WEDNESDAY -> {
-                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()?.plus(1)
-                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()
-            }
-            DayOfWeek.THURSDAY -> {
-                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.3)?.toInt()?.toDouble()?.plus(1)
-                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.3)?.toInt()?.toDouble()
-            }
-            else -> {
-                return null
-            }
-        }
-        val orderParam = OrderParams().apply {
-            exchange = NFO_EXCHANGE
-            tradingsymbol = instrument.tradingsymbol
-            transactionType = TRANSACTION_TYPE_BUY
-            quantity = QUANTITY_LOT_SIZE
-            price = price1
-            product = PRODUCT_NRML
-            orderType = ORDER_TYPE_SL
-            validity = VALIDITY_DAY
-            disclosedQuantity = 0
-            triggerPrice = triggerPrice1
-            squareoff = 0.0
-            stoploss = 0.0
-            trailingStoploss = 0.0
-            tag = TAG_TEST_UNCLE_THETA_WEDNESDAY
-            parentOrderId = ""
-        }
-        try {
-            return uncleThetaRepository.placeOrder(
-                orderParam = orderParam,
-                variety = VARIETY_REGULAR
-            )
-        } catch (exception: Throwable) {
-            logI("place order $exception")
-            exception.printStackTrace()
-        }
-        return null
-    }
+    //endregion
 
 
-    private fun placeOrder(instrument: Instrument, quote: Quote?): Order? {
-        val orderParam = OrderParams().apply {
-            exchange = NFO_EXCHANGE
-            tradingsymbol = instrument.tradingsymbol
-            transactionType = TRANSACTION_TYPE_SELL
-            quantity = QUANTITY_LOT_SIZE
-            price = quote?.depth?.buy?.get(0)?.price?.minus(0.25)
-            product = PRODUCT_NRML
-            orderType = ORDER_TYPE_LIMIT
-            validity = VALIDITY_DAY
-            disclosedQuantity = 0
-            triggerPrice = 0.0
-            squareoff = 0.0
-            stoploss = 0.0
-            trailingStoploss = 0.0
-            tag = TAG_TEST_UNCLE_THETA_WEDNESDAY
-            parentOrderId = ""
-        }
-        try {
-            return uncleThetaRepository.placeOrder(
-                orderParam = orderParam,
-                variety = VARIETY_REGULAR
-            )
-        } catch (exception: Throwable) {
-            logI("place order $exception")
-            exception.printStackTrace()
-        }
-        return null
-    }
+//    private suspend fun executeSellOrder(
+//        peNiftyQuote: Quote?,
+//        peNiftyInstrument: Instrument,
+//        ceNiftyQuote: Quote?,
+//        ceNiftyInstrument: Instrument
+//    ) {
+//        supervisorScope {
+//            val deferredOrderId1 = async {
+//                order1Price = peNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
+//                placeSellOrder(peNiftyInstrument, peNiftyQuote)
+//            }
+//            val deferredOrderId2 = async {
+//                order2Price = ceNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
+//                placeSellOrder(ceNiftyInstrument, ceNiftyQuote)
+//            }
+//            try {
+//                deferredOrderId1.await()
+//                result.postValue(
+//                    Resource.Success(
+//                        OrderSuccess(
+//                            order1Price.toString(),
+//                            peNiftyInstrument.tradingsymbol,
+//                            TRANSACTION_TYPE_BUY
+//                        )
+//                    )
+//                )
+//            } catch (ioException: IOException) {
+//                result.postValue(Resource.Error(ioException.message))
+//            } catch (jsonException: JSONException) {
+//                result.postValue(Resource.Error(jsonException.message))
+//            } catch (kiteException: KiteException) {
+//                result.postValue(Resource.Error((kiteException.message)))
+//            }
+//
+//            try {
+//                deferredOrderId2.await()
+//                result.postValue(
+//                    Resource.Success(
+//                        OrderSuccess(
+//                            order2Price.toString(),
+//                            ceNiftyInstrument.tradingsymbol,
+//                            TRANSACTION_TYPE_BUY
+//                        )
+//                    )
+//                )
+//                executeStopLossOrder(
+//                    ceNiftyInstrument,
+//                    ceNiftyQuote,
+//                    peNiftyInstrument,
+//                    peNiftyQuote
+//                )
+//            } catch (ioException: IOException) {
+//                result.postValue(Resource.Error(ioException.message))
+//            } catch (jsonException: JSONException) {
+//                result.postValue(Resource.Error(jsonException.message))
+//            } catch (kiteException: KiteException) {
+//                result.postValue(Resource.Error((kiteException.message)))
+//            }
+//        }
+//    }
+
+
+//    private suspend fun executeStopLossOrder(
+//        ceNiftyInstrument: Instrument,
+//        ceNiftyQuote: Quote?,
+//        peNiftyInstrument: Instrument,
+//        peNiftyQuote: Quote?
+//    ) {
+//        supervisorScope {
+//            val deferredCeSLOrder = async {
+//                placeStopLossOrder(ceNiftyInstrument, ceNiftyQuote)
+//            }
+//            val deferredPeSLOrder = async {
+//                placeStopLossOrder(peNiftyInstrument, peNiftyQuote)
+//            }
+//            try {
+//                val peSLOrder = deferredPeSLOrder.await()
+//                val ceSLOrder = deferredCeSLOrder.await()
+//                PreferenceManager.setPeSLOrderId(peSLOrder?.orderId)
+//                PreferenceManager.setCeSLOrderId(ceSLOrder?.orderId)
+//            } catch (ioException: IOException) {
+//                result.postValue(Resource.Error(ioException.message))
+//            } catch (jsonException: JSONException) {
+//                result.postValue(Resource.Error(jsonException.message))
+//            } catch (kiteException: KiteException) {
+//                result.postValue(Resource.Error((kiteException.message)))
+//            }
+//        }
+//    }
+
 }

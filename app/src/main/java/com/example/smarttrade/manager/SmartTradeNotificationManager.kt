@@ -31,7 +31,8 @@ object SmartTradeNotificationManager : KoinComponent {
     }
 
     fun buildStopLossPriceNotification(stopLossPrice: String, positionName: String) {
-        val notification = getNotification("$positionName triggered at stop loss price $stopLossPrice")
+        val notification =
+            getNotification("$positionName triggered at stop loss price $stopLossPrice")
         with(NotificationManagerCompat.from(context)) {
             notify(random.nextInt(), notification)
         }
@@ -40,6 +41,28 @@ object SmartTradeNotificationManager : KoinComponent {
     fun buildStopLossAmountNotification(stopLossAmount: String, positionName: String) {
         val notification =
             getNotification("$positionName triggered at stop loss Amount $stopLossAmount")
+        with(NotificationManagerCompat.from(context)) {
+            notify(random.nextInt(), notification)
+        }
+    }
+
+    fun buildTradeExecuteNotification(
+        executionPrice: String,
+        tradeName: String,
+        buyOrSell: String
+    ) {
+        logI(System.currentTimeMillis().toString() + "execution time")
+        val notification =
+            getNotification("$buyOrSell $tradeName order placed at $executionPrice")
+        with(NotificationManagerCompat.from(context)) {
+            notify(random.nextInt(), notification)
+        }
+    }
+
+    fun buildTradeFailureNotification(errorMessage: String?) {
+        logI(System.currentTimeMillis().toString() + "failure time")
+        val notification =
+            getNotification("Trade failed with reason: $errorMessage")
         with(NotificationManagerCompat.from(context)) {
             notify(random.nextInt(), notification)
         }
