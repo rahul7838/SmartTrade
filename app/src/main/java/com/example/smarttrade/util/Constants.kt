@@ -36,7 +36,6 @@ const val NFO_EXCHANGE = "NFO"
 const val NIFTY_50_INSTRUMENT = "256265"
 const val TRANSACTION_TYPE_SELL = "SELL"
 const val TRANSACTION_TYPE_BUY = "BUY"
-const val QUANTITY_LOT_SIZE = 50
 const val PRODUCT_MIS = "MIS"
 const val PRODUCT_NRML = "NRML"
 const val ORDER_TYPE_LIMIT = "LIMIT"
@@ -48,3 +47,5 @@ const val TAG_TEST_UNCLE_THETA_WEDNESDAY = "TEST_UNCLE_THETA"
 const val VARIETY_REGULAR = "regular"
 
 const val TIME_OUT_IN_MILLIS = 1 * 60 * 1000 // 1 milli second
+const val NIFTY_50_QUANTITY_LOT_SIZE = 50
+const val BANK_NIFTY_QUANTITY_LOT_SIZE = 25

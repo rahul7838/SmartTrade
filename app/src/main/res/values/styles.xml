@@ -30,4 +30,10 @@
 <!--        <item name="itemTextColor">@</item>-->
     </style>
 
+
+    <style name="TextViewWithDropDown" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textSize">24sp</item>
+        <item name="layout_constraintHorizontal_chainStyle">spread_inside</item>
+    </style>
+
 </resources>

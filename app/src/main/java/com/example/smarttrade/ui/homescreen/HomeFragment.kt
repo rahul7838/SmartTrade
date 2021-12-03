@@ -2,6 +2,10 @@ package com.example.smarttrade.ui.homescreen
 
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +19,8 @@ import com.example.smarttrade.util.Resource
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import java.time.DayOfWeek
+import java.time.LocalDate
 
 class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
 
@@ -34,17 +40,90 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setSpinner()
         setClickListener()
         initObserver()
         parentActivity.setToolbar("Uncle Theta")
     }
 
+    private fun setSpinner() {
+        viewDataBinding?.instrumentDropDown?.apply {
+            adapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.list_of_instrument,
+                R.layout.drop_down_list_of_instrument_item_view
+            ).also {
+                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
+                        if((view as TextView).text == resources.getStringArray(R.array.list_of_instrument)[0]) {
+                            viewDataBinding?.lotSize?.text = resources.getString(R.string.lot_size, "50")
+                        } else {
+                            viewDataBinding?.lotSize?.text = resources.getString(R.string.lot_size, "25")
+                        }
+                    }
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+                        Toast.makeText(requireContext(), "Not implemented", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+        viewDataBinding?.lotSizeDropDown?.apply {
+            adapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.list_of_lot_size,
+                R.layout.drop_down_list_of_instrument_item_view
+            )
+            setSelection(0)
+        }
+        viewDataBinding?.stopLossDropDown?.apply {
+            adapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.list_of_percent,
+                R.layout.drop_down_list_of_instrument_item_view
+            )
+            when(LocalDate.now().dayOfWeek) {
+                DayOfWeek.WEDNESDAY -> {
+                    setSelection(3)
+                }
+                DayOfWeek.THURSDAY -> {
+                    setSelection(2)
+                }
+                else -> setSelection(3)
+            }
+        }
+        viewDataBinding?.skewDropDown?.apply {
+            adapter = ArrayAdapter.createFromResource(
+                requireContext(),
+                R.array.list_of_percent,
+                R.layout.drop_down_list_of_instrument_item_view
+            ).also {
+                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+                        TODO("Not yet implemented")
+                    }
+
+                }
+            }
+            setSelection(2)
+        }
+    }
+
     private fun setClickListener() {
         viewDataBinding?.placeOrder?.setOnClickListener {
-//            if (!homeViewModel.inProgress) {
-//                homeViewModel.inProgress = (true)
             homeViewModel.getNifty50()
-//            }
         }
 
         viewDataBinding?.cancelOrder?.setOnClickListener {
@@ -92,4 +171,8 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
             }
         }
     }
+}
+
+interface MyClickListener {
+    fun onClick(position: Int)
 }

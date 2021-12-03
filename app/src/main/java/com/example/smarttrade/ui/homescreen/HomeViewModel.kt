@@ -45,9 +45,13 @@ class HomeViewModel(
 
     private val _overallResult = MutableStateFlow<Resource<Boolean>>(Resource.Success(true))
     val overallResult = _overallResult.asStateFlow()
-    private val _peSingleShotBusEvent = Channel<Resource<OrderSuccess>>(Channel.BUFFERED)
-    val singleShotEventBus = _peSingleShotBusEvent.receiveAsFlow()
+    private val _singleShotBusEvent = Channel<Resource<OrderSuccess>>(Channel.BUFFERED)
+    val singleShotEventBus = _singleShotBusEvent.receiveAsFlow()
 
+    val skewValue = 30
+    val stopLossValue = 30
+    val instrument = ""
+    val lotSize = 1
 
     // region
     fun getNSEInstrument() {
@@ -177,7 +181,7 @@ class HomeViewModel(
         try {
             order1Price = peNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
             val sellOrder = placeSellOrder(peNiftyInstrument, peNiftyQuote)
-            _peSingleShotBusEvent.send(
+            _singleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         order1Price.toString(),
@@ -192,7 +196,7 @@ class HomeViewModel(
                 priceAndTriggerPrice.first,
                 priceAndTriggerPrice.second
             )
-            _peSingleShotBusEvent.send(
+            _singleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         priceAndTriggerPrice.second.toString(),
@@ -203,11 +207,11 @@ class HomeViewModel(
             )
             PreferenceManager.setPeSLOrderId(slOrder.orderId)
         } catch (ioException: IOException) {
-            _peSingleShotBusEvent.send(Resource.Error(ioException.message))
+            _singleShotBusEvent.send(Resource.Error(ioException.message))
         } catch (jsonException: JSONException) {
-            _peSingleShotBusEvent.send(Resource.Error(jsonException.message))
+            _singleShotBusEvent.send(Resource.Error(jsonException.message))
         } catch (kiteException: KiteException) {
-            _peSingleShotBusEvent.send(Resource.Error((kiteException.message)))
+            _singleShotBusEvent.send(Resource.Error((kiteException.message)))
         }
     }
 
@@ -215,7 +219,7 @@ class HomeViewModel(
         try {
             order2Price = ceNiftyQuote?.depth?.buy?.get(0)?.price?.minus(0.25)
             val sellOrder = placeSellOrder(ceNiftyInstrument, ceNiftyQuote)
-            _peSingleShotBusEvent.send(
+            _singleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         order2Price.toString(),
@@ -230,7 +234,7 @@ class HomeViewModel(
                 priceAndTriggerPrice.first,
                 priceAndTriggerPrice.second
             )
-            _peSingleShotBusEvent.send(
+            _singleShotBusEvent.send(
                 Resource.Success(
                     OrderSuccess(
                         priceAndTriggerPrice.second.toString(),
@@ -241,11 +245,11 @@ class HomeViewModel(
             )
             PreferenceManager.setCeSLOrderId(slOrder.orderId)
         } catch (ioException: IOException) {
-            _peSingleShotBusEvent.send(Resource.Error(ioException.message))
+            _singleShotBusEvent.send(Resource.Error(ioException.message))
         } catch (jsonException: JSONException) {
-            _peSingleShotBusEvent.send(Resource.Error(jsonException.message))
+            _singleShotBusEvent.send(Resource.Error(jsonException.message))
         } catch (kiteException: KiteException) {
-            _peSingleShotBusEvent.send(Resource.Error((kiteException.message)))
+            _singleShotBusEvent.send(Resource.Error((kiteException.message)))
         }
     }
 
@@ -255,7 +259,7 @@ class HomeViewModel(
             exchange = NFO_EXCHANGE
             tradingsymbol = instrument.tradingsymbol
             transactionType = TRANSACTION_TYPE_SELL
-            quantity = QUANTITY_LOT_SIZE
+            quantity = NIFTY_50_QUANTITY_LOT_SIZE
             price = quote?.depth?.buy?.get(0)?.price?.minus(0.25)
             product = PRODUCT_NRML
             orderType = ORDER_TYPE_LIMIT
@@ -282,7 +286,7 @@ class HomeViewModel(
             exchange = NFO_EXCHANGE
             tradingsymbol = instrument.tradingsymbol
             transactionType = TRANSACTION_TYPE_BUY
-            quantity = QUANTITY_LOT_SIZE
+            quantity = NIFTY_50_QUANTITY_LOT_SIZE
             price = price1
             product = PRODUCT_NRML
             orderType = ORDER_TYPE_SL
@@ -353,7 +357,7 @@ class HomeViewModel(
             exchange = NFO_EXCHANGE
             tradingsymbol = instrument.tradingsymbol
             transactionType = TRANSACTION_TYPE_BUY
-            quantity = QUANTITY_LOT_SIZE
+            quantity = NIFTY_50_QUANTITY_LOT_SIZE
             price = quote[instrument.instrument_token.toString()]?.depth?.buy?.get(0)?.price
             product = PRODUCT_NRML
             orderType = ORDER_TYPE_LIMIT
