@@ -15,12 +15,12 @@
 
         <Spinner
             android:id="@+id/instrument_drop_down"
+            android:spinnerMode="dropdown"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="32dp"
-            android:layout_marginEnd="16dp"
-            android:spinnerMode="dropdown"
+            android:layout_marginEnd="24dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -38,30 +38,31 @@
 
         <Spinner
             android:id="@+id/lot_size_drop_down"
-            android:layout_width="wrap_content"
+            style="@style/CustomizeSpinner"
+            android:layout_width="128dp"
             android:layout_height="wrap_content"
-            android:spinnerMode="dropdown"
+            android:layout_marginStart="32dp"
             app:layout_constraintBottom_toBottomOf="@+id/lot_size"
             app:layout_constraintEnd_toEndOf="@+id/instrument_drop_down"
             app:layout_constraintStart_toEndOf="@+id/lot_size" />
 
         <TextView
             android:id="@+id/skew"
+            style="@style/TextViewWithDropDown"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="64dp"
             android:text="@string/skew"
-            style="@style/TextViewWithDropDown"
             app:layout_constraintEnd_toStartOf="@+id/skew_drop_down"
             app:layout_constraintStart_toStartOf="@+id/lot_size"
             app:layout_constraintTop_toBottomOf="@+id/lot_size" />
 
         <Spinner
             android:id="@+id/skew_drop_down"
-            android:layout_width="wrap_content"
+            style="@style/CustomizeSpinner"
+            android:layout_width="128dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="194dp"
-            android:spinnerMode="dropdown"
+            android:layout_marginStart="32dp"
             app:layout_constraintBottom_toBottomOf="@+id/skew"
             app:layout_constraintEnd_toEndOf="@+id/lot_size_drop_down"
             app:layout_constraintStart_toEndOf="@+id/skew" />
@@ -71,7 +72,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="64dp"
-            android:layout_marginEnd="49dp"
             android:text="@string/stop_loss"
             style="@style/TextViewWithDropDown"
             app:layout_constraintEnd_toStartOf="@+id/stop_loss_drop_down"
@@ -80,10 +80,10 @@
 
         <Spinner
             android:id="@+id/stop_loss_drop_down"
-            android:layout_width="wrap_content"
+            style="@style/CustomizeSpinner"
+            android:layout_width="128dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="153dp"
-            android:spinnerMode="dropdown"
+            android:layout_marginStart="32dp"
             app:layout_constraintBottom_toBottomOf="@+id/stop_loss"
             app:layout_constraintEnd_toEndOf="@+id/skew_drop_down"
             app:layout_constraintStart_toEndOf="@+id/stop_loss" />

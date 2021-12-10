@@ -169,6 +169,20 @@ fun closestMultipleOf50(lastPrice: Double?): Double? {
     return roundOfValue
 }
 
+fun closestMultipleOf100(lastPrice: Double?): Double? {
+    if (lastPrice == null) {
+        return null
+    }
+    val roundOfValue: Double
+    val lastTwoDigit = lastPrice.rem(100)
+    roundOfValue = if (lastTwoDigit > 50) {
+        lastPrice - lastTwoDigit + 100
+    } else {
+        lastPrice.minus(lastTwoDigit)
+    }
+    return roundOfValue
+}
+
 @Throws(IllegalArgumentException::class)
 fun calculateSkew(pePrice: Double?, cePrice: Double?): Double {
     if (pePrice == null) {

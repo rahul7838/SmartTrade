@@ -21,6 +21,7 @@ import java.io.IOException
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.util.*
+import kotlin.properties.Delegates
 
 @KoinApiExtension
 class HomeViewModel(
@@ -28,9 +29,6 @@ class HomeViewModel(
     requestToken: String?,
     private val io: CoroutineDispatcher = Dispatchers.IO
 ) : BaseViewModel() {
-
-    @Volatile
-    var inProgress = false
 
     init {
         if (requestToken != null) {
@@ -48,10 +46,14 @@ class HomeViewModel(
     private val _singleShotBusEvent = Channel<Resource<OrderSuccess>>(Channel.BUFFERED)
     val singleShotEventBus = _singleShotBusEvent.receiveAsFlow()
 
-    val skewValue = 30
-    val stopLossValue = 30
-    val instrument = ""
-    val lotSize = 1
+    var skewPercent: Int by Delegates.observable(30) {_, _, newValue ->
+        skewValue = (newValue.toFloat()/100)
+    }
+    var stopLossValue = if(LocalDate.now().dayOfWeek == DayOfWeek.WEDNESDAY) 40 else 30
+    var instrumentNumber = NIFTY_50_INSTRUMENT
+    var lotSize = 1
+
+    var skewValue: Float = (skewPercent.toFloat()/100)
 
     // region
     fun getNSEInstrument() {
@@ -74,6 +76,7 @@ class HomeViewModel(
 
     /** last price of nifty 50 using [com.zerodhatech.models.Quote] API */
     fun getNifty50() {
+
         CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             _overallResult.value = Resource.Loading()
             supervisorScope {
@@ -85,7 +88,7 @@ class HomeViewModel(
                     val deferredListOfNFOInstrument =
                         async { uncleThetaRepository.getInstruments(NFO_EXCHANGE) }
                     val deferredNifty50LastPrice =
-                        async { uncleThetaRepository.getQuote(arrayOf(NIFTY_50_INSTRUMENT))[NIFTY_50_INSTRUMENT]?.lastPrice }
+                        async { uncleThetaRepository.getQuote(arrayOf(instrumentNumber))[instrumentNumber]?.lastPrice }
                     val nifty50LastPrice: Double? = deferredNifty50LastPrice.await()
                     val expiryDate: Date = deferredExpiry.await()
                     val listOfNFOInstrument: List<Instrument> = deferredListOfNFOInstrument.await()
@@ -114,11 +117,13 @@ class HomeViewModel(
         val ceNiftyInstrument: Instrument
         val peNiftyQuote: Quote?
         val ceNiftyQuote: Quote?
-        val strike = closestMultipleOf50(nifty50LastPrice).removeDecimalPart()
+        val strike = if(instrumentNumber == NIFTY_50_INSTRUMENT) closestMultipleOf50(nifty50LastPrice).removeDecimalPart() else closestMultipleOf100(nifty50LastPrice).removeDecimalPart()
+        val instrumentName = if(instrumentNumber == NIFTY_50_INSTRUMENT) NAME_NIFTY else NAME_BANK_NIFTY
         val filteredInstrumentBasedOnStrikeAndExpiry =
             listOfNFOInstrument.filter { instrument ->
                 val expiryDate = instrument.expiry
-                ((instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_PE) || (instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_CE)) && instrument.name == NAME_NIFTY
+                ((instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_PE) || (instrument.strike == strike && instrument.instrument_type == INSTRUMENT_TYPE_CE))
+                        && instrument.name == instrumentName
                         && expiryDate.year == expiry.year && expiryDate.month == expiry.month && expiryDate.date == expiry.date
             }
         peNiftyInstrument = filteredInstrumentBasedOnStrikeAndExpiry[0]
@@ -154,11 +159,15 @@ class HomeViewModel(
         ceNiftyQuote: Quote?,
         ceNiftyInstrument: Instrument
     ) {
+        logI("Skew:$skewValue")
+        logI("StopLoss:$stopLossValue")
+        logI("Instrument:$instrumentNumber")
+        logI("Lot Size:$lotSize")
         val skew: Double
         try {
             skew = calculateSkew(peNiftyQuote?.lastPrice, ceNiftyQuote?.lastPrice)
-            if (skew > 16) {
-                _overallResult.value = (Resource.Error("Skew value is $skew which is > 0.3"))
+            if (skew > skewValue) {
+                _overallResult.value = (Resource.Error("Skew value is $skew which is > $skewValue"))
             } else {
                 logI("Execute sell order")
                 supervisorScope {
@@ -259,7 +268,7 @@ class HomeViewModel(
             exchange = NFO_EXCHANGE
             tradingsymbol = instrument.tradingsymbol
             transactionType = TRANSACTION_TYPE_SELL
-            quantity = NIFTY_50_QUANTITY_LOT_SIZE
+            quantity = (if(instrumentNumber == NIFTY_50_INSTRUMENT) 50*lotSize else 25*lotSize).also { logI("quantity $it") }
             price = quote?.depth?.buy?.get(0)?.price?.minus(0.25)
             product = PRODUCT_NRML
             orderType = ORDER_TYPE_LIMIT
@@ -286,7 +295,7 @@ class HomeViewModel(
             exchange = NFO_EXCHANGE
             tradingsymbol = instrument.tradingsymbol
             transactionType = TRANSACTION_TYPE_BUY
-            quantity = NIFTY_50_QUANTITY_LOT_SIZE
+            quantity = if(instrumentNumber == NIFTY_50_INSTRUMENT) 50*lotSize else 25*lotSize
             price = price1
             product = PRODUCT_NRML
             orderType = ORDER_TYPE_SL
@@ -309,19 +318,21 @@ class HomeViewModel(
     private fun calculateStopLossPrice(quote: Quote?): Pair<Double?, Double?> {
         val price1: Double?
         val triggerPrice1: Double?
+        val stopLossTimes: Float = (1 + (stopLossValue.toFloat()/100))
+        logI("stop loss times $stopLossTimes")
         when (LocalDate.now().dayOfWeek) {
             DayOfWeek.WEDNESDAY -> {
-                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()?.plus(1)
-                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()
+                price1 = quote?.depth?.buy?.get(0)?.price?.times(stopLossTimes)?.toInt()?.toDouble()?.plus(1)
+                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(stopLossTimes)?.toInt()?.toDouble()
             }
             DayOfWeek.THURSDAY -> {
-                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.3)?.toInt()?.toDouble()?.plus(1)
-                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.3)?.toInt()?.toDouble()
+                price1 = quote?.depth?.buy?.get(0)?.price?.times(stopLossTimes)?.toInt()?.toDouble()?.plus(1)
+                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(stopLossTimes)?.toInt()?.toDouble()
             }
             else -> {
                 //                TODO Handle else scenario
-                price1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()?.plus(1)
-                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(1.4)?.toInt()?.toDouble()
+                price1 = quote?.depth?.buy?.get(0)?.price?.times(stopLossTimes)?.toInt()?.toDouble()?.plus(1)
+                triggerPrice1 = quote?.depth?.buy?.get(0)?.price?.times(stopLossTimes)?.toInt()?.toDouble()
             }
         }
         logI("Price:$price1, Trigger price $triggerPrice1")

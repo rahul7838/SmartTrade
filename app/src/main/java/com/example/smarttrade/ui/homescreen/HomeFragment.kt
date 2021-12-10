@@ -15,6 +15,8 @@ import com.example.smarttrade.R
 import com.example.smarttrade.databinding.HomeScreenBinding
 import com.example.smarttrade.manager.SmartTradeNotificationManager
 import com.example.smarttrade.ui.base.BaseFragment
+import com.example.smarttrade.util.BANK_NIFTY_INSTRUMENT
+import com.example.smarttrade.util.NIFTY_50_INSTRUMENT
 import com.example.smarttrade.util.Resource
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -62,8 +64,10 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
                     ) {
                         if((view as TextView).text == resources.getStringArray(R.array.list_of_instrument)[0]) {
                             viewDataBinding?.lotSize?.text = resources.getString(R.string.lot_size, "50")
+                            homeViewModel.instrumentNumber = NIFTY_50_INSTRUMENT
                         } else {
                             viewDataBinding?.lotSize?.text = resources.getString(R.string.lot_size, "25")
+                            homeViewModel.instrumentNumber = BANK_NIFTY_INSTRUMENT
                         }
                     }
                     override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -77,7 +81,23 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
                 requireContext(),
                 R.array.list_of_lot_size,
                 R.layout.drop_down_list_of_instrument_item_view
-            )
+            ).also {
+                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
+                        homeViewModel.lotSize = it.getItem(position).toString().toInt()
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+
+                    }
+
+                }
+            }
             setSelection(0)
         }
         viewDataBinding?.stopLossDropDown?.apply {
@@ -85,7 +105,22 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
                 requireContext(),
                 R.array.list_of_percent,
                 R.layout.drop_down_list_of_instrument_item_view
-            )
+            ).also {
+                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
+                        homeViewModel.stopLossValue = it.getItem(position).toString().toInt()
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+                    }
+
+                }
+            }
             when(LocalDate.now().dayOfWeek) {
                 DayOfWeek.WEDNESDAY -> {
                     setSelection(3)
@@ -95,6 +130,7 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
                 }
                 else -> setSelection(3)
             }
+
         }
         viewDataBinding?.skewDropDown?.apply {
             adapter = ArrayAdapter.createFromResource(
@@ -109,10 +145,10 @@ class HomeFragment : BaseFragment<HomeScreenBinding, HomeViewModel>() {
                         position: Int,
                         id: Long
                     ) {
+                        homeViewModel.skewPercent = it.getItem(position).toString().toInt()
                     }
 
                     override fun onNothingSelected(parent: AdapterView<*>?) {
-                        TODO("Not yet implemented")
                     }
 
                 }

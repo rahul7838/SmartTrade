@@ -1,8 +1,6 @@
 package com.example.smarttrade.ui.position
 
 import android.os.Bundle
-import androidx.navigation.Navigation
-import androidx.navigation.ui.NavigationUI
 import com.example.smarttrade.R
 import com.example.smarttrade.databinding.ActivityPortfolioBinding
 import com.example.smarttrade.manager.PreferenceManager
@@ -34,8 +32,8 @@ class PortfolioActivity : BaseActivity<ActivityPortfolioBinding>() {
 
     override fun onStart() {
         super.onStart()
-        val navController = Navigation.findNavController(this, R.id.portfolio_nav_host)
-        viewBinding?.bottomNavigation?.let { NavigationUI.setupWithNavController(it, navController) }
+//        val navController = Navigation.findNavController(this, R.id.portfolio_nav_host)
+//        viewBinding?.bottomNavigation?.let { NavigationUI.setupWithNavController(it, navController) }
     }
 
 //    override fun onNavigationItemSelected(item: MenuItem): Boolean {
